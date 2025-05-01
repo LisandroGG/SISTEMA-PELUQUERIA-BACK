@@ -1,8 +1,15 @@
 import { Service } from "../models/services.js";
+import { Worker } from "../models/workers.js";
 
 export const getServices = async (req, res) => {
 	try {
-		const services = await Service.findAll();
+		const services = await Service.findAll({
+			include: {
+				model: Worker,
+				attributes: ["id", "name"],
+				through: { attributes: [] },
+			},
+		});
 		res.status(200).json(services);
 	} catch (error) {
 		console.error("Error al obtener services", error);
@@ -11,7 +18,7 @@ export const getServices = async (req, res) => {
 };
 
 export const createService = async (req, res) => {
-	const { name, cost, duration } = req.body;
+	const { name, cost, duration, workerIds } = req.body;
 
 	if (!name || !cost || !duration) {
 		return res.status(404).json({ message: "Completa los campos" });
@@ -32,9 +39,29 @@ export const createService = async (req, res) => {
 			duration,
 		});
 
-		res.status(200).json({
+		if (workerIds && Array.isArray(workerIds)) {
+			const workers = await Worker.findAll({ where: { id: workerIds } });
+
+			if (workers.length !== workerIds.length) {
+				return res
+					.status(400)
+					.json({ message: "Uno o más trabajadores no existen" });
+			}
+
+			await newService.setWorkers(workerIds);
+		}
+
+		const serviceWithWorkers = await Service.findByPk(newService.id, {
+			include: {
+				model: Worker,
+				attributes: ["id", "name"],
+				through: { attributes: [] },
+			},
+		});
+
+		res.status(201).json({
 			message: "Servicio creado correctamente!",
-			service: newService,
+			service: serviceWithWorkers,
 		});
 	} catch (error) {
 		console.error("Error al crear service", error);
@@ -64,9 +91,9 @@ export const deleteService = async (req, res) => {
 
 export const editService = async (req, res) => {
 	const { id } = req.params;
-	const { name, cost, duration } = req.body;
+	const { name, cost, duration, workerIds } = req.body;
 
-	if (!name && !cost && !duration) {
+	if (!name && !cost && !duration && !workerIds) {
 		return res
 			.status(400)
 			.json({ message: "Debes proporcionar al menos un dato a modificar" });
@@ -83,11 +110,31 @@ export const editService = async (req, res) => {
 		if (cost !== undefined) service.cost = cost;
 		if (duration !== undefined) service.duration = duration;
 
-		await service.save();
+		await service.update();
 
-		res.status(200).json({
-			message: "Servicio actualizado correctamente",
-			service,
+		if (Array.isArray(workerIds)) {
+			const workers = await Worker.findAll({ where: { id: workerIds } });
+
+			if (workers.length !== workerIds.length) {
+				return res
+					.status(400)
+					.json({ message: "Uno o más trabajadores no existen" });
+			}
+
+			await service.setWorkers(workerIds);
+		}
+
+		const serviceWithWorkers = await Service.findByPk(service.id, {
+			include: {
+				model: Worker,
+				attributes: ["id", "name"],
+				through: { attributes: [] },
+			},
+		});
+
+		res.status(201).json({
+			message: "Servicio actualizado correctamente!",
+			service: serviceWithWorkers,
 		});
 	} catch (error) {
 		console.error("Error al editar service", error);

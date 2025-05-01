@@ -4,6 +4,7 @@ import {
 	deleteWorker,
 	editWorker,
 	getWorkers,
+	getWorkersByService,
 } from "../controllers/workersControllers.js";
 import { isAdmin } from "../middlewares/authAdmin.js";
 import { authUser } from "../middlewares/authUser.js";
@@ -11,6 +12,7 @@ import { authUser } from "../middlewares/authUser.js";
 export const workersRouter = Router();
 
 workersRouter.get("/", getWorkers);
+workersRouter.get("/:serviceId/Workers", getWorkersByService);
 
 workersRouter.post("/create", authUser, isAdmin, createWorker);
 

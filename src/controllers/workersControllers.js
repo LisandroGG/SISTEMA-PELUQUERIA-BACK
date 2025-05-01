@@ -1,3 +1,4 @@
+import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 
 export const getWorkers = async (req, res) => {
@@ -9,6 +10,29 @@ export const getWorkers = async (req, res) => {
 	} catch (error) {
 		console.error("Error al obtener workers:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
+	}
+};
+
+export const getWorkersByService = async (req, res) => {
+	const { serviceId } = req.params;
+
+	try {
+		const service = await Service.findByPk(serviceId, {
+			include: {
+				model: Worker,
+				attributes: ["id", "name"],
+				through: { attributes: [] },
+			},
+		});
+
+		if (!service) {
+			return res.status(404).json({ message: "Servicio no encontrado" });
+		}
+
+		res.json(service.Workers);
+	} catch (error) {
+		console.error("Error al obtener workersByService:", error);
+		res.status(500).json({ message: "Error del servidor" });
 	}
 };
 
