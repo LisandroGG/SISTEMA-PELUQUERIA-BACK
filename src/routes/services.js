@@ -11,6 +11,6 @@ import { authUser } from "../middlewares/authUser.js";
 export const servicesRouter = Router();
 
 servicesRouter.get("/", getServices);
-servicesRouter.post("/create", createService);
-servicesRouter.put("/edit/:id", editService);
-servicesRouter.delete("/delete/:id", deleteService);
+servicesRouter.post("/create", authUser, isAdmin, createService);
+servicesRouter.put("/edit/:id", authUser, isAdmin, editService);
+servicesRouter.delete("/delete/:id", authUser, isAdmin, deleteService);
