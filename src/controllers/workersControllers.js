@@ -20,7 +20,7 @@ export const createWorker = async (req, res) => {
 
 		if (worker) {
 			return res
-				.status(409)
+				.status(400)
 				.json({ message: "Ya hay un trabajador con este gmail" });
 		}
 
@@ -30,7 +30,7 @@ export const createWorker = async (req, res) => {
 			phoneNumber,
 		});
 
-		return res.status(200).json({
+		res.status(200).json({
 			message: "Trabajador creado correctamente!",
 			worker: newWorker,
 		});
@@ -51,9 +51,7 @@ export const deleteWorker = async (req, res) => {
 		}
 
 		await worker.destroy();
-		return res
-			.status(200)
-			.json({ message: "Trabajdor eliminado correctamente" });
+		res.status(200).json({ message: "Trabajador eliminado correctamente" });
 	} catch (error) {
 		console.error("Error al eliminar trabajador:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
@@ -82,7 +80,7 @@ export const editWorker = async (req, res) => {
 
 		await worker.save();
 
-		return res.status(200).json({
+		res.status(200).json({
 			message: "Trabajador actualizado correctamente",
 			worker,
 		});
