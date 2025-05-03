@@ -125,9 +125,22 @@ export const getHoursByDate = async (req, res) => {
 
 		const dayOfWeek = format(parsedDate, "eeee", { locale: es });
 
-		const service = await Service.findByPk(serviceId);
+		const service = await Service.findByPk(serviceId, {
+			include: [{ model: Worker, as: "Workers" }],
+		});
 		if (!service) {
 			return res.status(404).json({ message: "Servicio no encontrado" });
+		}
+
+		const workerIsAssigned = service.Workers.some(
+			(worker) => worker.id === Number.parseInt(workerId),
+		);
+
+		if (!workerIsAssigned) {
+			return res.status(400).json({
+				message: "Este trabajador no ofrece el servicio seleccionado",
+				hours: [],
+			});
 		}
 
 		const serviceDuration = service.duration;

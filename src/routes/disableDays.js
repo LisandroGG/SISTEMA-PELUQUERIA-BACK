@@ -10,5 +10,5 @@ import { authUser } from "../middlewares/authUser.js";
 export const disableDayRouter = Router();
 
 disableDayRouter.get("/:workerId", getDisabledDaysByWorker);
-disableDayRouter.post("/", authUser, isAdmin, createDisableDay);
-disableDayRouter.delete("/:id", authUser, isAdmin, deleteDisableDay);
+disableDayRouter.post("/create", authUser, isAdmin, createDisableDay);
+disableDayRouter.delete("/delete/:id", authUser, isAdmin, deleteDisableDay);

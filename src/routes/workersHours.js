@@ -18,15 +18,35 @@ export const workersHoursRouter = Router();
 workersHoursRouter.get("/by-date", getHoursByDate); //?workerId=1&date=2025-05-10
 
 workersHoursRouter.get("/working", getWorkingHours);
-workersHoursRouter.post("/working", authUser, isAdmin, createWorkingHour);
-workersHoursRouter.put("/working/:id", authUser, isAdmin, editWorkingHour);
-workersHoursRouter.delete("/working/:id", authUser, isAdmin, deleteWorkingHour);
+workersHoursRouter.post(
+	"/working/create",
+	authUser,
+	isAdmin,
+	createWorkingHour,
+);
+workersHoursRouter.put("/working/edit/:id", authUser, isAdmin, editWorkingHour);
+workersHoursRouter.delete(
+	"/working/delete/:id",
+	authUser,
+	isAdmin,
+	deleteWorkingHour,
+);
 
 workersHoursRouter.get("/custom", getCustomWorkingHours);
-workersHoursRouter.post("/custom", authUser, isAdmin, createCustomWorkingHour);
-workersHoursRouter.put("/custom/:id", authUser, isAdmin, editCustomWorkingHour);
+workersHoursRouter.post(
+	"/custom7create",
+	authUser,
+	isAdmin,
+	createCustomWorkingHour,
+);
+workersHoursRouter.put(
+	"/custom/edit/:id",
+	authUser,
+	isAdmin,
+	editCustomWorkingHour,
+);
 workersHoursRouter.delete(
-	"/custom/:id",
+	"/custom/delete/:id",
 	authUser,
 	isAdmin,
 	deleteCustomWorkingHour,

@@ -110,7 +110,7 @@ export const editService = async (req, res) => {
 		if (cost !== undefined) service.cost = cost;
 		if (duration !== undefined) service.duration = duration;
 
-		await service.update();
+		await service.save();
 
 		if (Array.isArray(workerIds)) {
 			const workers = await Worker.findAll({ where: { id: workerIds } });
