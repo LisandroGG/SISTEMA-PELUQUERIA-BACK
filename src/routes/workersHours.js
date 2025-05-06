@@ -34,7 +34,7 @@ workersHoursRouter.delete(
 
 workersHoursRouter.get("/custom", getCustomWorkingHours);
 workersHoursRouter.post(
-	"/custom7create",
+	"/custom/create",
 	authUser,
 	isAdmin,
 	createCustomWorkingHour,

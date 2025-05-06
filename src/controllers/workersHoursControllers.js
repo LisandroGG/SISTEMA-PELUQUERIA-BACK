@@ -4,12 +4,15 @@ import {
 	isAfter,
 	isBefore,
 	isToday,
+	parse,
 	parseISO,
 	startOfDay,
 } from "date-fns";
 import { es } from "date-fns/locale";
+import { Op } from "sequelize";
 import { CustomWorkingHour } from "../models/customWorkingHours.js";
 import { DisableDay } from "../models/disableDays.js";
+import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
@@ -114,7 +117,6 @@ export const getHoursByDate = async (req, res) => {
 		const parsedDate = parseISO(date);
 		const now = new Date();
 
-		// ❌ No permitir días anteriores a hoy
 		if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 			return res.status(200).json({
 				source: "past",
@@ -163,7 +165,6 @@ export const getHoursByDate = async (req, res) => {
 		});
 
 		const timeSlots = [];
-
 		const shouldFilterPastTimes = isToday(parsedDate);
 
 		const generateSlots = (startTimeStr, endTimeStr) => {
@@ -185,33 +186,47 @@ export const getHoursByDate = async (req, res) => {
 
 		if (customWorkingHours) {
 			generateSlots(customWorkingHours.startTime, customWorkingHours.endTime);
-
-			return res.status(200).json({
-				source: "custom",
-				customWorkingHours,
-				timeSlots,
+		} else {
+			const workingHours = await WorkingHour.findAll({
+				where: { workerId, dayOfWeek },
+				include: [{ model: Worker, as: "worker" }],
 			});
+
+			for (const work of workingHours) {
+				generateSlots(work.startTime, work.endTime);
+			}
 		}
 
-		const workingHours = await WorkingHour.findAll({
-			where: { workerId, dayOfWeek },
-			include: [{ model: Worker, as: "worker" }],
+		const existingReservations = await Reservation.findAll({
+			where: {
+				workerId,
+				date,
+				status: {
+					[Op.notIn]: ["cancel"],
+				},
+			},
+			attributes: ["startTime"],
 		});
 
-		for (const work of workingHours) {
-			generateSlots(work.startTime, work.endTime);
-		}
+		const reservedTimes = new Set(
+			existingReservations.map((res) =>
+				format(parse(res.startTime, "HH:mm:ss", new Date()), "HH:mm"),
+			),
+		);
 
-		timeSlots.sort((a, b) => {
+		const availableSlots = timeSlots.filter(
+			(slot) => !reservedTimes.has(slot.startTime),
+		);
+
+		availableSlots.sort((a, b) => {
 			const timeA = new Date(`1970-01-01T${a.startTime}:00Z`);
 			const timeB = new Date(`1970-01-01T${b.startTime}:00Z`);
 			return timeA - timeB;
 		});
 
 		return res.status(200).json({
-			source: "weekly",
-			workingHours,
-			timeSlots,
+			source: customWorkingHours ? "custom" : "weekly",
+			timeSlots: availableSlots,
 		});
 	} catch (error) {
 		console.error("Error al obtener los horarios del trabajador:", error);
