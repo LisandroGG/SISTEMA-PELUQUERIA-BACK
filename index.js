@@ -5,6 +5,7 @@ import express from "express";
 import { sequelize } from "./src/database/database.js";
 import { mainRouter } from "./src/routes/index.js";
 import "./src/models/relationships.js";
+import "./src/cron/reminder.js";
 
 dotenv.config();
 

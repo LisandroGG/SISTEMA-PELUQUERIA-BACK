@@ -33,6 +33,10 @@ export const Reservation = sequelize.define(
 			type: DataTypes.ENUM("confirm", "cancel", "finish"),
 			defaultValue: "confirm",
 		},
+		reminderSent: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		}
 	},
 	{
 		timestamps: false,

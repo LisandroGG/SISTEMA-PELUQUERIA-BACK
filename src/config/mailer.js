@@ -71,3 +71,23 @@ export const sendChangePassword = async (user) => {
 		return false;
 	}
 };
+
+export const sendGmailReminder = async ({ to, name, service, date, time, worker }) => {
+	const info = await transporter.sendMail({
+		from: '"AF Peluquería" <peluqueriaaf4@gmail.com',
+		to,
+		subject: "Recordatorio de tu turno",
+		html: `
+			<h2>Hola ${name},</h2>
+			<p>Este es un recordatorio de tu turno:</p>
+			<ul>
+				<li><b>Servicio:</b> ${service}</li>
+				<li><b>Día:</b> ${date}</li>
+				<li><b>Hora:</b> ${time}</li>
+				<li><b>Con:</b> ${worker}</li>
+			</ul>
+			<p>¡Te esperamos!</p>
+		`,
+	});
+	console.log("📧 Recordatorio enviado: %s", info.messageId);
+};
