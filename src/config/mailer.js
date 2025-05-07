@@ -85,6 +85,7 @@ export const sendNewReservation = async ({
 	date,
 	time,
 	worker,
+	token,
 }) => {
 	const info = await transporter.sendMail({
 		from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
@@ -99,6 +100,8 @@ export const sendNewReservation = async ({
 					<li><b>Hora:</b> ${time}</li>
 					<li><b>Con:</b> ${worker}</li>
 				</ul>
+				<p>Para cancelarlo haz click en el boton:</p>
+				<a href="${process.env.LOCALHOST}/cancel?token=${token}">Cancelar turno </a>
 			`,
 	});
 	console.log("📧 Nueva reserva enviada:", info.messageId);

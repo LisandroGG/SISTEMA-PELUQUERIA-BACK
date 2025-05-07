@@ -28,4 +28,4 @@ reservationsRouter.put(
 	isAdmin,
 	finishReservation,
 );
-reservationsRouter.put("/:reservationId/cancel", cancelReservation);
+reservationsRouter.put("/cancel", cancelReservation);

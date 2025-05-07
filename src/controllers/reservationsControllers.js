@@ -1,5 +1,6 @@
 import { addMinutes, format, isBefore, parseISO, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
+import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import { sendCancelReservation, sendNewReservation } from "../config/mailer.js";
 import {
@@ -120,6 +121,19 @@ export const createReservation = async (req, res) => {
 			clientPhoneNumber,
 		});
 
+		const cancelStartDateTime = new Date(
+			`${reservation.date}T${reservation.startTime}`,
+		);
+		const expirationTime = new Date(
+			cancelStartDateTime.getTime() - 60 * 60 * 1000,
+		);
+
+		const token = jwt.sign(
+			{ reservationId: reservation.id },
+			process.env.JWT_SECRET_KEY,
+			{ expiresIn: Math.floor((expirationTime.getTime() - Date.now()) / 1000) },
+		);
+
 		const fullReservation = await Reservation.findByPk(reservation.id, {
 			include: [
 				{ model: Worker, as: "worker", attributes: ["name"] },
@@ -137,6 +151,7 @@ export const createReservation = async (req, res) => {
 			time: formattedTime,
 			date: formattedDate,
 			worker: fullReservation.worker.name,
+			token: token,
 		});
 
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
@@ -268,9 +283,15 @@ export const finishReservation = async (req, res) => {
 };
 
 export const cancelReservation = async (req, res) => {
-	const { reservationId } = req.params;
+	const { token } = req.query;
+
+	if (!token) {
+		return res.status(400).json({ message: "Token requerido" });
+	}
 
 	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+		const { reservationId } = decoded;
 		const reservation = await Reservation.findByPk(reservationId, {
 			attributes: { exclude: ["workerId", "serviceId"] },
 			include: [
