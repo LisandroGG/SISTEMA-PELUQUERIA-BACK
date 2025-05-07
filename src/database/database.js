@@ -29,7 +29,7 @@ try {
 	console.log("✅ DB CONNECT");
 
 	console.log("⏳ SYNC MODELS");
-	await sequelize.sync({ alter: true });
+	await sequelize.sync({ alter: false });
 	console.log("✅ MODELS CONNECT");
 } catch (error) {
 	console.log("❌ DB CONNECT ERRO", error);

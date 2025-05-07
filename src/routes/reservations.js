@@ -15,7 +15,12 @@ export const reservationsRouter = Router();
 
 reservationsRouter.get("/", authUser, isAdmin, getReservations);
 reservationsRouter.get("/by-gmail", getReservationsByGmail);
-reservationsRouter.get("/by-worker/:workerId", authUser, isAdmin, getReservationsByWorker);
+reservationsRouter.get(
+	"/by-worker/:workerId",
+	authUser,
+	isAdmin,
+	getReservationsByWorker,
+);
 reservationsRouter.post("/create", createReservation);
 reservationsRouter.put(
 	"/:reservationId/finish",

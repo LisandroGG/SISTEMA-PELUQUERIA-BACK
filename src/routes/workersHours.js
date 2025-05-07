@@ -6,6 +6,7 @@ import {
 	deleteWorkingHour,
 	editCustomWorkingHour,
 	editWorkingHour,
+	getBlockedDays,
 	getCustomWorkingHours,
 	getHoursByDate,
 	getWorkingHours,
@@ -16,6 +17,7 @@ import { authUser } from "../middlewares/authUser.js";
 export const workersHoursRouter = Router();
 
 workersHoursRouter.get("/by-date", getHoursByDate); //?workerId=1&date=2025-05-10
+workersHoursRouter.get("/bloquedDays", authUser, isAdmin, getBlockedDays);
 
 workersHoursRouter.get("/working", getWorkingHours);
 workersHoursRouter.post(

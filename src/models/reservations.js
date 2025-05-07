@@ -17,6 +17,10 @@ export const Reservation = sequelize.define(
 			type: DataTypes.TIME,
 			allowNull: false,
 		},
+		endTime: {
+			type: DataTypes.TIME,
+			allowNull: false,
+		},
 		clientName: {
 			type: DataTypes.STRING,
 			allowNull: false,
@@ -35,8 +39,8 @@ export const Reservation = sequelize.define(
 		},
 		reminderSent: {
 			type: DataTypes.BOOLEAN,
-			defaultValue: false
-		}
+			defaultValue: false,
+		},
 	},
 	{
 		timestamps: false,

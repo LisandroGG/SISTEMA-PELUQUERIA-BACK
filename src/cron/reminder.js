@@ -1,10 +1,10 @@
-import cron from "node-cron";
 import { format } from "date-fns";
-import { Reservation } from "../models/reservations.js";
-import { Worker } from "../models/workers.js";
-import { Service } from "../models/services.js";
-import { sendGmailReminder } from "../config/mailer.js";
+import cron from "node-cron";
 import { Op } from "sequelize";
+import { sendGmailReminder } from "../config/mailer.js";
+import { Reservation } from "../models/reservations.js";
+import { Service } from "../models/services.js";
+import { Worker } from "../models/workers.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
@@ -39,9 +39,9 @@ cron.schedule("* * * * *", async () => {
 				worker: res.worker.name,
 			});
 
-            await res.update({ reminderSent: true });
+			await res.update({ reminderSent: true });
 			console.log(
-				`🔔 Enviado recordatorio a ${res.clientGmail} para ${res.date} ${res.startTime}`
+				`🔔 Enviado recordatorio a ${res.clientGmail} para ${res.date} ${res.startTime}`,
 			);
 		}
 	} catch (error) {

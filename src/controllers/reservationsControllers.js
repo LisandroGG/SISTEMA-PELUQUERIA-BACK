@@ -106,6 +106,7 @@ export const createReservation = async (req, res) => {
 			serviceId,
 			date,
 			startTime,
+			endTime: format(serviceEndTime, "HH:mm"),
 			clientName,
 			clientGmail,
 			clientPhoneNumber,

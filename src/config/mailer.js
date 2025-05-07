@@ -72,7 +72,14 @@ export const sendChangePassword = async (user) => {
 	}
 };
 
-export const sendGmailReminder = async ({ to, name, service, date, time, worker }) => {
+export const sendGmailReminder = async ({
+	to,
+	name,
+	service,
+	date,
+	time,
+	worker,
+}) => {
 	const info = await transporter.sendMail({
 		from: '"AF Peluquería" <peluqueriaaf4@gmail.com',
 		to,
