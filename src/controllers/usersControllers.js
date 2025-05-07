@@ -108,13 +108,13 @@ export const loginUser = async (req, res) => {
 		res.cookie("token", access_token, {
 			httpOnly: true,
 			sameSite: "Lax",
-			maxAge: 2 * 60 * 60 * 1000, //2 hours
+			maxAge: 2 * 60 * 60 * 1000,
 		});
 
 		res.cookie("refreshToken", refresh_token, {
 			httpOnly: true,
 			sameSite: "Lax",
-			maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+			maxAge: 30 * 24 * 60 * 60 * 1000,
 		});
 
 		return res.status(200).json({

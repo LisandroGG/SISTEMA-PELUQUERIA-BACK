@@ -1,12 +1,17 @@
+import { addMinutes, format, isBefore, parseISO, startOfDay } from "date-fns";
+import { es } from "date-fns/locale";
+import { Op } from "sequelize";
+import { sendCancelReservation, sendNewReservation } from "../config/mailer.js";
+import {
+	formatDateToLongSpanish,
+	formatTimeToHHMM,
+} from "../helpers/format.js";
 import { CustomWorkingHour } from "../models/customWorkingHours.js";
 import { DisableDay } from "../models/disableDays.js";
 import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
-
-import { addMinutes, format, isBefore, parseISO, startOfDay } from "date-fns";
-import { es } from "date-fns/locale";
 
 export const createReservation = async (req, res) => {
 	const {
@@ -92,6 +97,9 @@ export const createReservation = async (req, res) => {
 				workerId,
 				date,
 				startTime,
+				status: {
+					[Op.notIn]: ["cancel"],
+				},
 			},
 		});
 
@@ -110,6 +118,25 @@ export const createReservation = async (req, res) => {
 			clientName,
 			clientGmail,
 			clientPhoneNumber,
+		});
+
+		const fullReservation = await Reservation.findByPk(reservation.id, {
+			include: [
+				{ model: Worker, as: "worker", attributes: ["name"] },
+				{ model: Service, as: "service", attributes: ["name"] },
+			],
+		});
+
+		const formattedDate = formatDateToLongSpanish(fullReservation.date);
+		const formattedTime = formatTimeToHHMM(fullReservation.startTime);
+
+		await sendNewReservation({
+			to: fullReservation.clientGmail,
+			name: fullReservation.clientName,
+			service: fullReservation.service.name,
+			time: formattedTime,
+			date: formattedDate,
+			worker: fullReservation.worker.name,
 		});
 
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
@@ -183,7 +210,7 @@ export const getReservationsByGmail = async (req, res) => {
 };
 
 export const getReservationsByWorker = async (req, res) => {
-	const { workerId } = req.params;
+	const { workerId } = req.query;
 
 	if (!workerId) {
 		return res
@@ -244,7 +271,17 @@ export const cancelReservation = async (req, res) => {
 	const { reservationId } = req.params;
 
 	try {
-		const reservation = await Reservation.findByPk(reservationId);
+		const reservation = await Reservation.findByPk(reservationId, {
+			attributes: { exclude: ["workerId", "serviceId"] },
+			include: [
+				{ model: Worker, as: "worker", attributes: ["id", "name"] },
+				{
+					model: Service,
+					as: "service",
+					attributes: ["id", "name", "duration"],
+				},
+			],
+		});
 
 		if (!reservation) {
 			return res.status(404).json({ message: "Reserva no encontrada" });
@@ -255,6 +292,22 @@ export const cancelReservation = async (req, res) => {
 		}
 
 		reservation.status = "cancel";
+
+		const formattedDate = formatDateToLongSpanish(reservation.date);
+		const formattedTime = formatTimeToHHMM(reservation.startTime);
+
+		const sendGmail = await sendCancelReservation({
+			to: reservation.clientGmail,
+			name: reservation.clientName,
+			service: reservation.service.name,
+			time: formattedTime,
+			date: formattedDate,
+			worker: reservation.worker.name,
+		});
+
+		if (sendGmail) {
+			console.log("error al enviar notificacion");
+		}
 
 		await reservation.save();
 

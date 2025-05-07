@@ -1,7 +1,13 @@
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
-const { MAILER_USER, MAILER_HOST, MAILER_PORT, MAILER_PASSWORD } = process.env;
+const {
+	MAILER_USER,
+	MAILER_HOST,
+	MAILER_PORT,
+	MAILER_PASSWORD,
+	MAILER_BARBER_NAME,
+} = process.env;
 
 export const transporter = nodemailer.createTransport({
 	host: `${MAILER_HOST}`,
@@ -16,11 +22,11 @@ export const transporter = nodemailer.createTransport({
 export const sendRegisterUser = async (name, email) => {
 	try {
 		await transporter.sendMail({
-			from: `${MAILER_USER}`,
+			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
 			to: `${email}`,
-			subject: "Registro en AF Peluquería",
+			subject: `Registro en ${MAILER_BARBER_NAME}`,
 			html: `
-                <h2>Hola ${name}, gracias por registrarte en AF Peluquería</h2>
+                <h2>Hola ${name}, gracias por registrarte en ${MAILER_BARBER_NAME}</h2>
                 <a href="${process.env.LOCALHOST}/login">Inicia sesion</a>
             `,
 		});
@@ -38,7 +44,7 @@ export const sendForgotPassword = async (user, email) => {
 
 	try {
 		await transporter.sendMail({
-			from: `${MAILER_USER}`,
+			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
 			to: `${email}`,
 			subject: "Cambiar contraseña",
 			html: `
@@ -57,7 +63,7 @@ export const sendForgotPassword = async (user, email) => {
 export const sendChangePassword = async (user) => {
 	try {
 		await transporter.sendMail({
-			from: `${MAILER_USER}`,
+			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
 			to: `${user.email}`,
 			subject: "Actualizacion de contraseña",
 			html: `
@@ -72,6 +78,58 @@ export const sendChangePassword = async (user) => {
 	}
 };
 
+export const sendNewReservation = async ({
+	to,
+	name,
+	service,
+	date,
+	time,
+	worker,
+}) => {
+	const info = await transporter.sendMail({
+		from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
+		to,
+		subject: "Reserva de turno",
+		html: `
+				<h2>Hola ${name}</h2>
+				<p>Haz reservado un nuevo turno:</p>
+				<ul>
+					<li><b>Servicio:</b> ${service}</li>
+					<li><b>Día:</b> ${date}</li>
+					<li><b>Hora:</b> ${time}</li>
+					<li><b>Con:</b> ${worker}</li>
+				</ul>
+			`,
+	});
+	console.log("📧 Nueva reserva enviada:", info.messageId);
+};
+
+export const sendCancelReservation = async ({
+	to,
+	name,
+	service,
+	date,
+	time,
+	worker,
+}) => {
+	const info = await transporter.sendMail({
+		from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
+		to,
+		subject: "Cancelación de turno",
+		html: `
+				<h2>Hola ${name}</h2>
+				<p>Haz cancelado tu turno:</p>
+				<ul>
+					<li><b>Servicio:</b> ${service}</li>
+					<li><b>Día:</b> ${date}</li>
+					<li><b>Hora:</b> ${time}</li>
+					<li><b>Con:</b> ${worker}</li>
+				</ul>
+			`,
+	});
+	console.log("📧 Cancelacion enviada:", info.messageId);
+};
+
 export const sendGmailReminder = async ({
 	to,
 	name,
@@ -81,11 +139,11 @@ export const sendGmailReminder = async ({
 	worker,
 }) => {
 	const info = await transporter.sendMail({
-		from: '"AF Peluquería" <peluqueriaaf4@gmail.com',
+		from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
 		to,
 		subject: "Recordatorio de tu turno",
 		html: `
-			<h2>Hola ${name},</h2>
+			<h2>Hola ${name}</h2>
 			<p>Este es un recordatorio de tu turno:</p>
 			<ul>
 				<li><b>Servicio:</b> ${service}</li>

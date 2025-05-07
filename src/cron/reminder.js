@@ -2,6 +2,10 @@ import { format } from "date-fns";
 import cron from "node-cron";
 import { Op } from "sequelize";
 import { sendGmailReminder } from "../config/mailer.js";
+import {
+	formatDateToLongSpanish,
+	formatTimeToHHMM,
+} from "../helpers/format.js";
 import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
@@ -30,12 +34,14 @@ cron.schedule("* * * * *", async () => {
 		});
 
 		for (const res of reservations) {
+			const formattedDate = formatDateToLongSpanish(res.date);
+			const formattedTime = formatTimeToHHMM(res.startTime);
 			await sendGmailReminder({
 				to: res.clientGmail,
 				name: res.clientName,
 				service: res.service.name,
-				time: res.startTime,
-				date: res.date,
+				time: formattedTime,
+				date: formattedDate,
 				worker: res.worker.name,
 			});
 
