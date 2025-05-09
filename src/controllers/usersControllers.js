@@ -61,7 +61,7 @@ export const registerUser = async (req, res) => {
 		return res.status(201).json({
 			message: "Cuenta creada exitosamente!",
 			user: {
-				id: newUser.userId,
+				id: newUser.id,
 				name: newUser.name,
 				gmail: newUser.gmail,
 				phoneNumber: newUser.phoneNumber,
@@ -91,7 +91,7 @@ export const loginUser = async (req, res) => {
 		}
 
 		const payload = {
-			userId: user.userId,
+			id: user.id,
 			role: user.role,
 			gmail: user.gmail,
 		};
@@ -121,7 +121,7 @@ export const loginUser = async (req, res) => {
 			message: "Inicio de sesion exitoso!",
 			token: access_token,
 			user: {
-				userId: user.userId,
+				id: user.id,
 				name: user.name,
 				role: user.role,
 			},
@@ -149,7 +149,7 @@ export const refreshAccessToken = async (req, res) => {
 
 		const newAccessToken = jwt.sign(
 			{
-				userId: decoded.userId,
+				id: decoded.id,
 				gmail: decoded.gmail,
 				role: decoded.role,
 			},
@@ -236,7 +236,7 @@ export const changePassword = async (req, res) => {
 
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-		const user = await User.findByPk(decoded.userId);
+		const user = await User.findByPk(decoded.id);
 		if (!user)
 			return res.status(404).json({ message: "Usuario no encontrado" });
 
@@ -268,13 +268,13 @@ export const getMe = async (req, res) => {
 
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-		const user = await User.findByPk(decoded.userId);
+		const user = await User.findByPk(decoded.id);
 		if (!user)
 			return res.status(404).json({ message: "Usuario no encontrado" });
 
 		return res.status(200).json({
 			user: {
-				userId: user.userId,
+				id: user.id,
 				name: user.name,
 				gmail: user.gmail,
 				phoneNumber: user.phoneNumber,

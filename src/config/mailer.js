@@ -19,11 +19,11 @@ export const transporter = nodemailer.createTransport({
 	},
 });
 
-export const sendRegisterUser = async (name, email) => {
+export const sendRegisterUser = async (name, gmail) => {
 	try {
 		await transporter.sendMail({
 			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-			to: `${email}`,
+			to: `${gmail}`,
 			subject: `Registro en ${MAILER_BARBER_NAME}`,
 			html: `
                 <h2>Hola ${name}, gracias por registrarte en ${MAILER_BARBER_NAME}</h2>
@@ -37,15 +37,15 @@ export const sendRegisterUser = async (name, email) => {
 	}
 };
 
-export const sendForgotPassword = async (user, email) => {
-	const token = jwt.sign({ userId: user.userId }, process.env.JWT_SECRET_KEY, {
+export const sendForgotPassword = async (user, gmail) => {
+	const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, {
 		expiresIn: "15m",
 	});
 
 	try {
 		await transporter.sendMail({
 			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-			to: `${email}`,
+			to: `${gmail}`,
 			subject: "Cambiar contraseña",
 			html: `
                 <h2>${user.name}, haz click en el siguiente enlace para cambiar tu contraseña: </h2>
@@ -64,7 +64,7 @@ export const sendChangePassword = async (user) => {
 	try {
 		await transporter.sendMail({
 			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-			to: `${user.email}`,
+			to: `${user.gmail}`,
 			subject: "Actualizacion de contraseña",
 			html: `
                 <h2>${user.name} has actualizado tu contraseña</h2>
