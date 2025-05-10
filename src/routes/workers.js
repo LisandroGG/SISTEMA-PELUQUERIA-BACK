@@ -11,7 +11,7 @@ import { authUser } from "../middlewares/authUser.js";
 
 export const workersRouter = Router();
 
-workersRouter.get("/", getWorkers, authUser, isAdmin,);
+workersRouter.get("/", authUser, isAdmin, getWorkers);
 workersRouter.get("/:serviceId", getWorkersByService);
 
 workersRouter.post("/create", authUser, isAdmin, createWorker);
