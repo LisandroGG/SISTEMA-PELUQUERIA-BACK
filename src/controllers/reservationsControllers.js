@@ -308,6 +308,10 @@ export const cancelReservation = async (req, res) => {
 			return res.status(404).json({ message: "Reserva no encontrada" });
 		}
 
+		if (reservation.status === "finish") {
+			return res.status(400).json({ message: "La reserva ya termino" });
+		}
+
 		if (reservation.status === "cancel") {
 			return res.status(400).json({ message: "La reserva ya está cancelada" });
 		}
