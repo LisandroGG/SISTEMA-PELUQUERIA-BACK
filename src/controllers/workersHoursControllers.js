@@ -160,7 +160,7 @@ export const getBlockedDays = async (req, res) => {
 
 	const today = new Date();
 	const blockedDays = [];
-	const daysToCheck = 30;
+	const daysToCheck = 60;
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
