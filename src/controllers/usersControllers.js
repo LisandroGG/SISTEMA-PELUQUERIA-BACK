@@ -123,6 +123,8 @@ export const loginUser = async (req, res) => {
 			user: {
 				id: user.id,
 				name: user.name,
+				gmail: user.gmail,
+				phoneNumber: user.phoneNumber,
 				role: user.role,
 			},
 		});

@@ -84,15 +84,6 @@ export const createReservation = async (req, res) => {
 		const startDateTime = new Date(`${date}T${startTime}`);
 		const serviceEndTime = addMinutes(startDateTime, serviceDuration);
 
-		const startRange = new Date(`${date}T${start}`);
-		const endRange = new Date(`${date}T${end}`);
-
-		if (startDateTime < startRange || serviceEndTime > endRange) {
-			return res
-				.status(400)
-				.json({ message: "Horario fuera del rango laboral" });
-		}
-
 		const overlapping = await Reservation.findOne({
 			where: {
 				workerId,
