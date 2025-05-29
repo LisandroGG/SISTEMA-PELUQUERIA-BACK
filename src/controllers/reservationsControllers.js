@@ -144,7 +144,6 @@ export const createReservation = async (req, res) => {
 			worker: fullReservation.worker.name,
 			token: token,
 		});
-
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
 	} catch (error) {
 		console.error("Error al crear la reserva:", error);
@@ -195,7 +194,14 @@ export const getReservationsByGmail = async (req, res) => {
 	try {
 		const reservations = await Reservation.findAll({
 			where: { clientGmail: gmail, status: "confirm" },
-			include: [{ model: Worker, as: "worker" }],
+			include: [
+				{ model: Worker, as: "worker", attributes: ["id", "name"] },
+				{
+					model: Service,
+					as: "service",
+					attributes: ["name", "duration"],
+				},
+			],
 			order: [
 				["date", "ASC"],
 				["startTime", "ASC"],
