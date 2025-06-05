@@ -14,7 +14,9 @@ Worker.belongsToMany(Service, { through: "ServiceWorker" });
 
 Worker.hasMany(WorkingHour, {
 	foreignKey: "workerId",
-	as: "workingHours",
+	as: "workingHours",	
+	onDelete: "CASCADE",
+	hooks: true
 });
 WorkingHour.belongsTo(Worker, {
 	foreignKey: "workerId",
