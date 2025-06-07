@@ -68,12 +68,26 @@ export const createWorkingHour = async (req, res) => {
 export const getWorkingHours = async (req, res) => {
 	const { workerId } = req.query;
 
+	const dayOrder = [
+	"lunes",
+	"martes",
+	"miércoles",
+	"jueves",
+	"viernes",
+	"sábado",
+	"domingo",
+];
+
 	try {
 		const workingHours = await WorkingHour.findAll({
 			where: { workerId },
 			attributes: { exclude: ["workerId"] },
 			include: [{ model: Worker, as: "worker" }],
 		});
+
+		workingHours.sort(
+	(a, b) => dayOrder.indexOf(a.dayOfWeek.toLowerCase()) - dayOrder.indexOf(b.dayOfWeek.toLowerCase())
+	);
 
 		if (workingHours.length === 0) {
 			return res.status(404).json({
