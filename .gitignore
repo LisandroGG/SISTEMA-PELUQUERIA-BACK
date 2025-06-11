@@ -1,0 +1,39 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Database files
+*.sqlite
+*.sqlite-journal
+pgdata/
+
+# Build files
+dist/
+build/
+coverage/
+.tmp/
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
