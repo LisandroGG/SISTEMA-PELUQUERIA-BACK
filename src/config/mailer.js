@@ -10,12 +10,12 @@ const {
 } = process.env;
 
 export const transporter = nodemailer.createTransport({
-	host: `${MAILER_HOST}`,
-	port: `${MAILER_PORT}`,
-	secure: "true",
+	host: MAILER_HOST,
+	port: Number(MAILER_PORT),
+	secure: MAILER_PORT === "465",
 	auth: {
-		user: `${MAILER_USER}`,
-		pass: `${MAILER_PASSWORD}`,
+		user: MAILER_USER,
+		pass: MAILER_PASSWORD,
 	},
 });
 
