@@ -11,93 +11,90 @@ import {
 } from "date-fns";
 import { es } from "date-fns/locale";
 import { Op } from "sequelize";
+import { Sequelize } from "sequelize";
 import { CustomWorkingHour } from "../models/customWorkingHours.js";
 import { DisableDay } from "../models/disableDays.js";
 import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
-import { Sequelize } from "sequelize";
 
 export const createWorkingHour = async (req, res) => {
-  const hours = req.body;
+	const hours = req.body;
 
-  if (!Array.isArray(hours)) {
-    return res
-      .status(400)
-      .json({ message: "El cuerpo debe ser un array de horarios." });
-  }
+	if (!Array.isArray(hours)) {
+		return res
+			.status(400)
+			.json({ message: "El cuerpo debe ser un array de horarios." });
+	}
 
-  try {
-    const created = [];
+	try {
+		const created = [];
 
-    for (const hour of hours) {
-      const { workerId, dayOfWeek, startTime, endTime } = hour;
+		for (const hour of hours) {
+			const { workerId, dayOfWeek, startTime, endTime } = hour;
 
-      // Validaciones básicas
-      if (!workerId || !dayOfWeek || !startTime || !endTime) {
-        return res
-          .status(400)
-          .json({ message: "Todos los campos son obligatorios." });
-      }
-      if (startTime >= endTime) {
-        return res
-          .status(400)
-          .json({ message: `El tiempo de inicio debe ser menor que el de . Error en el horario: ${JSON.stringify(hour)}` });
-      }
+			if (!workerId || !dayOfWeek || !startTime || !endTime) {
+				return res
+					.status(400)
+					.json({ message: "Todos los campos son obligatorios." });
+			}
+			if (startTime >= endTime) {
+				return res.status(400).json({
+					message: `El tiempo de inicio debe ser menor que el de . Error en el horario: ${JSON.stringify(hour)}`,
+				});
+			}
 
-      // Verificar si se superpone con otro horario existente
-      const overlapping = await WorkingHour.findOne({
-        where: {
-          workerId,
-          dayOfWeek,
-          [Op.or]: [
-            {
-              startTime: { [Op.lt]: endTime },
-              endTime: { [Op.gt]: startTime },
-            },
-          ],
-        },
-      });
+			const overlapping = await WorkingHour.findOne({
+				where: {
+					workerId,
+					dayOfWeek,
+					[Op.or]: [
+						{
+							startTime: { [Op.lt]: endTime },
+							endTime: { [Op.gt]: startTime },
+						},
+					],
+				},
+			});
 
-      if (overlapping) {
-        return res.status(400).json({
-          message: `Horario superpuesto o duplicado detectado para el día ${dayOfWeek}.`,
-          conflictingHour: overlapping,
-        });
-      }
+			if (overlapping) {
+				return res.status(400).json({
+					message: `Horario superpuesto o duplicado detectado para el día ${dayOfWeek}.`,
+					conflictingHour: overlapping,
+				});
+			}
 
-      // Crear el horario
-      const newHour = await WorkingHour.create({
-        workerId,
-        dayOfWeek,
-        startTime,
-        endTime,
-      });
-      created.push(newHour);
-    }
+			const newHour = await WorkingHour.create({
+				workerId,
+				dayOfWeek,
+				startTime,
+				endTime,
+			});
+			created.push(newHour);
+		}
 
-    res.status(201).json({
-      message: "Horarios semanales creados exitosamente!",
-      hours: created,
-    });
-  } catch (error) {
-    console.error("Error al crear workingHours:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
-  }
+		res.status(201).json({
+			message: "Horarios semanales creados exitosamente!",
+			hours: created,
+		});
+	} catch (error) {
+		console.error("Error al crear workingHours:", error);
+		res.status(500).json({ message: "Error interno del servidor" });
+	}
 };
 
 export const getWorkingHours = async (req, res) => {
 	const { workerId } = req.query;
 
 	try {
-const workingHours = await WorkingHour.findAll({
-	where: { workerId },
-	attributes: { exclude: ["workerId"] },
-	include: [{ model: Worker, as: "worker" }],
-	order: [
-		[
-			Sequelize.literal(`
+		const workingHours = await WorkingHour.findAll({
+			where: { workerId },
+			attributes: { exclude: ["workerId"] },
+			include: [{ model: Worker, as: "worker" }],
+			order: [
+				[
+					Sequelize.literal(`
 				CASE "WorkingHour"."dayOfWeek"
 					WHEN 'lunes' THEN 1
 					WHEN 'martes' THEN 2
@@ -108,11 +105,11 @@ const workingHours = await WorkingHour.findAll({
 					WHEN 'domingo' THEN 7
 				END
 			`),
-			'ASC'
-		],
-		['startTime', 'ASC']
-	]
-});
+					"ASC",
+				],
+				["startTime", "ASC"],
+			],
+		});
 
 		if (workingHours.length === 0) {
 			return res.status(404).json({
@@ -134,28 +131,42 @@ export const createCustomWorkingHour = async (req, res) => {
 	const { workerId, dayOfWeek, startTime, endTime } = req.body;
 
 	try {
-		    const existingOverlap = await CustomWorkingHour.findOne({
-      where: {
-        workerId,
-        dayOfWeek,
-        [Op.or]: [
-          {
-            startTime: {
-              [Op.lt]: endTime,
-            },
-            endTime: {
-              [Op.gt]: startTime,
-            },
-          },
-        ],
-      },
-    });
+		const isDisabled = await DisableDay.findOne({
+			where: {
+				day: dayOfWeek,
+				workerId: workerId,
+			},
+		});
 
-    if (existingOverlap) {
-      return res.status(400).json({
-        message: "Ya existe un horario personalizado que se superpone con este.",
-      });
-    }
+		if (isDisabled) {
+			return res.status(400).json({
+				message: `No se puede crear un horario personalizado para el día ${dayOfWeek} porque está deshabilitado.`,
+			});
+		}
+
+		const existingOverlap = await CustomWorkingHour.findOne({
+			where: {
+				workerId,
+				dayOfWeek,
+				[Op.or]: [
+					{
+						startTime: {
+							[Op.lt]: endTime,
+						},
+						endTime: {
+							[Op.gt]: startTime,
+						},
+					},
+				],
+			},
+		});
+
+		if (existingOverlap) {
+			return res.status(400).json({
+				message:
+					"Ya existe un horario personalizado que se superpone con este.",
+			});
+		}
 		const customHour = await CustomWorkingHour.create({
 			workerId,
 			dayOfWeek,
@@ -180,7 +191,10 @@ export const getCustomWorkingHours = async (req, res) => {
 		const customWorkingHours = await CustomWorkingHour.findAll({
 			where: { workerId },
 			include: [{ model: Worker, as: "worker" }],
-			order: [["dayOfWeek", "ASC"], ["startTime", "ASC"]],
+			order: [
+				["dayOfWeek", "ASC"],
+				["startTime", "ASC"],
+			],
 		});
 
 		if (customWorkingHours.length === 0) {
@@ -296,9 +310,9 @@ export const getWorkerAvailableHours = async ({
 	}
 
 	const customWorkingHours = await CustomWorkingHour.findAll({
-  where: { workerId, dayOfWeek: date },
-  include: [{ model: Worker, as: "worker" }],
-});
+		where: { workerId, dayOfWeek: date },
+		include: [{ model: Worker, as: "worker" }],
+	});
 
 	const timeSlots = [];
 	const shouldFilterPastTimes = isToday(parsedDate);
@@ -321,18 +335,18 @@ export const getWorkerAvailableHours = async ({
 	};
 
 	if (customWorkingHours.length > 0) {
-  for (const customHour of customWorkingHours) {
-    generateSlots(customHour.startTime, customHour.endTime);
-  }
-} else {
-  const workingHours = await WorkingHour.findAll({
-    where: { workerId, dayOfWeek },
-    include: [{ model: Worker, as: "worker" }],
-  });
-  for (const work of workingHours) {
-    generateSlots(work.startTime, work.endTime);
-  }
-}
+		for (const customHour of customWorkingHours) {
+			generateSlots(customHour.startTime, customHour.endTime);
+		}
+	} else {
+		const workingHours = await WorkingHour.findAll({
+			where: { workerId, dayOfWeek },
+			include: [{ model: Worker, as: "worker" }],
+		});
+		for (const work of workingHours) {
+			generateSlots(work.startTime, work.endTime);
+		}
+	}
 
 	const existingReservations = await Reservation.findAll({
 		where: {
@@ -383,106 +397,103 @@ export const getWorkerAvailableHours = async ({
 };
 
 export const editWorkingHour = async (req, res) => {
-  const { id } = req.params;
-  const { startTime, endTime } = req.body;
+	const { id } = req.params;
+	const { startTime, endTime } = req.body;
 
-  try {
-    const workingHour = await WorkingHour.findByPk(id);
+	try {
+		const workingHour = await WorkingHour.findByPk(id);
 
-    if (!workingHour) {
-      return res.status(404).json({ message: "Horario no encontrado" });
-    }
+		if (!workingHour) {
+			return res.status(404).json({ message: "Horario no encontrado" });
+		}
 
-    // Mantener valores existentes si no se pasan nuevos
-    const newStart = startTime ?? workingHour.startTime;
-    const newEnd = endTime ?? workingHour.endTime;
-    const { workerId, dayOfWeek } = workingHour;
+		const newStart = startTime ?? workingHour.startTime;
+		const newEnd = endTime ?? workingHour.endTime;
+		const { workerId, dayOfWeek } = workingHour;
 
-    // Validar solapamiento con otros horarios del mismo trabajador y día
-    const overlapping = await WorkingHour.findOne({
-      where: {
-        id: { [Op.ne]: id }, // Excluir este mismo horario
-        workerId,
-        dayOfWeek,
-        [Op.or]: [
-          {
-            startTime: { [Op.lt]: newEnd },
-            endTime: { [Op.gt]: newStart },
-          },
-        ],
-      },
-    });
+		const overlapping = await WorkingHour.findOne({
+			where: {
+				id: { [Op.ne]: id },
+				workerId,
+				dayOfWeek,
+				[Op.or]: [
+					{
+						startTime: { [Op.lt]: newEnd },
+						endTime: { [Op.gt]: newStart },
+					},
+				],
+			},
+		});
 
-    if (overlapping) {
-      return res.status(400).json({
-        message: "Ya existe un horario semanal que se superpone con este.",
-      });
-    }
+		if (overlapping) {
+			return res.status(400).json({
+				message: "Ya existe un horario semanal que se superpone con este.",
+			});
+		}
 
-    // Guardar cambios
-    workingHour.startTime = newStart;
-    workingHour.endTime = newEnd;
-    await workingHour.save();
+		workingHour.startTime = newStart;
+		workingHour.endTime = newEnd;
+		await workingHour.save();
 
-    res.status(200).json({
-      message: "Horario semanal actualizado exitosamente!",
-      workingHour,
-    });
-  } catch (error) {
-    console.error("Error al actualizar el horario:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
-  }
+		res.status(200).json({
+			message: "Horario semanal actualizado exitosamente!",
+			workingHour,
+		});
+	} catch (error) {
+		console.error("Error al actualizar el horario:", error);
+		res.status(500).json({ message: "Error interno del servidor" });
+	}
 };
 
 export const editCustomWorkingHour = async (req, res) => {
 	const { id } = req.params;
 	const { startTime, endTime } = req.body;
 
-	try {	
+	try {
 		const customHour = await CustomWorkingHour.findByPk(id);
 
 		if (!customHour) {
 			return res
 				.status(404)
 				.json({ message: "Horario personalizado no encontrado" });
-		}	
-const { workerId, dayOfWeek } = customHour;
-    const newStart = startTime ?? customHour.startTime;
-    const newEnd = endTime ?? customHour.endTime;
+		}
+		const { workerId, dayOfWeek } = customHour;
+		const newStart = startTime ?? customHour.startTime;
+		const newEnd = endTime ?? customHour.endTime;
 
-    // Validar que no se superponga con otro horario
-    const overlapping = await CustomWorkingHour.findOne({
-      where: {
-        id: { [Op.ne]: id }, // Excluir el horario actual
-        workerId,
-        dayOfWeek,
-        [Op.or]: [
-          {
-            startTime: { [Op.lt]: newEnd },
-            endTime: { [Op.gt]: newStart },
-          },
-        ],
-      },
-    });
+		const overlapping = await CustomWorkingHour.findOne({
+			where: {
+				id: { [Op.ne]: id }, 
+				workerId,
+				dayOfWeek,
+				[Op.or]: [
+					{
+						startTime: { [Op.lt]: newEnd },
+						endTime: { [Op.gt]: newStart },
+					},
+				],
+			},
+		});
 
-    if (overlapping) {
-      return res.status(400).json({
-        message: "Ya existe un horario personalizado que se superpone con este.",
-      });
-    }
+		if (overlapping) {
+			return res.status(400).json({
+				message:
+					"Ya existe un horario personalizado que se superpone con este.",
+			});
+		}
 
-    customHour.startTime = newStart;
-    customHour.endTime = newEnd;
-    await customHour.save();
+		customHour.startTime = newStart;
+		customHour.endTime = newEnd;
+		await customHour.save();
 
-    res.status(200).json({
-      message: "Horario personalizado actualizado exitosamente!",
-      customHour,
-    });
-  } catch (error) {
-    console.error("Error al actualizar customWorkingHour:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
-  }
+		res.status(200).json({
+			message: "Horario personalizado actualizado exitosamente!",
+			customHour,
+		});
+	} catch (error) {
+		console.error("Error al actualizar customWorkingHour:", error);
+		res.status(500).json({ message: "Error interno del servidor" });
+	}
 };
 
 export const deleteWorkingHour = async (req, res) => {
@@ -497,7 +508,9 @@ export const deleteWorkingHour = async (req, res) => {
 
 		await workingHour.destroy();
 
-		res.status(200).json({ message: "Horario semanal eliminado exitosamente!" });
+		res
+			.status(200)
+			.json({ message: "Horario semanal eliminado exitosamente!" });
 	} catch (error) {
 		console.error("Error al eliminar WorkingHour:", error);
 		res.status(500).json({ message: "Error interno del servidor" });

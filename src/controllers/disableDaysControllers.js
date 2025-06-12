@@ -46,7 +46,10 @@ export const getDisabledDaysByWorker = async (req, res) => {
 	const { workerId } = req.query;
 
 	try {
-		const disabledDays = await DisableDay.findAll({ where: { workerId }, attributes: { exclude: ["workerId"] }, });
+		const disabledDays = await DisableDay.findAll({
+			where: { workerId },
+			attributes: { exclude: ["workerId"] },
+		});
 
 		res.status(200).json(disabledDays);
 	} catch (error) {
