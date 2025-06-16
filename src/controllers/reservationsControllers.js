@@ -159,7 +159,11 @@ export const getReservations = async (req, res) => {
 
 		if (workerId) where.workerId = workerId;
 		if (date) where.date = date;
-		if (status) where.status = status;
+		if (status) {
+			where.status = status;
+		} else {
+			where.status = "confirm";
+		}
 		if (serviceId) where.serviceId = serviceId;
 
 		const reservations = await Reservation.findAll({
