@@ -153,12 +153,14 @@ export const createReservation = async (req, res) => {
 
 export const getReservations = async (req, res) => {
 	try {
-		const { workerId, date, status } = req.query;
+		const { workerId, date, status, serviceId } = req.query;
 
 		const where = {};
+
 		if (workerId) where.workerId = workerId;
 		if (date) where.date = date;
 		if (status) where.status = status;
+		if (serviceId) where.serviceId = serviceId;
 
 		const reservations = await Reservation.findAll({
 			where,
@@ -177,9 +179,13 @@ export const getReservations = async (req, res) => {
 			],
 		});
 
-		res.status(200).json(reservations);
+		if (reservations.length === 0) {
+			return res.status(200).json({ message: "No se encontraron reservas" });
+		}
+
+		res.status(200).json({ reservations });
 	} catch (error) {
-		console.error("Error al obtener las reservas:", error);
+		console.error("Error al obtener las reservas.", error);
 		res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -217,38 +223,6 @@ export const getReservationsByGmail = async (req, res) => {
 		return res.status(200).json({ reservations });
 	} catch (error) {
 		console.error("Error al obtener reservas por Gmail:", error);
-		return res.status(500).json({ message: "Error del servidor" });
-	}
-};
-
-export const getReservationsByWorker = async (req, res) => {
-	const { workerId } = req.query;
-
-	if (!workerId) {
-		return res
-			.status(400)
-			.json({ message: "El ID del trabajador es requerido" });
-	}
-
-	try {
-		const reservations = await Reservation.findAll({
-			where: { workerId, status: "confirm" },
-			include: [{ model: Worker, as: "worker" }],
-			order: [
-				["date", "ASC"],
-				["startTime", "ASC"],
-			],
-		});
-
-		if (reservations.length === 0) {
-			return res
-				.status(404)
-				.json({ message: "No se encontraron reservas para este trabajador" });
-		}
-
-		return res.status(200).json({ reservations });
-	} catch (error) {
-		console.error("Error al obtener reservas por trabajador:", error);
 		return res.status(500).json({ message: "Error del servidor" });
 	}
 };

@@ -463,7 +463,7 @@ export const editCustomWorkingHour = async (req, res) => {
 
 		const overlapping = await CustomWorkingHour.findOne({
 			where: {
-				id: { [Op.ne]: id }, 
+				id: { [Op.ne]: id },
 				workerId,
 				dayOfWeek,
 				[Op.or]: [
