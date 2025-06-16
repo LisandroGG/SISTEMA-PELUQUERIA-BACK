@@ -183,10 +183,6 @@ export const getReservations = async (req, res) => {
 			],
 		});
 
-		if (reservations.length === 0) {
-			return res.status(200).json({ message: "No se encontraron reservas" });
-		}
-
 		res.status(200).json({ reservations });
 	} catch (error) {
 		console.error("Error al obtener las reservas.", error);
