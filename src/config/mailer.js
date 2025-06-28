@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import mjml2html from "mjml";
 import nodemailer from "nodemailer";
 
 const {
@@ -7,6 +8,7 @@ const {
 	MAILER_PORT,
 	MAILER_PASSWORD,
 	MAILER_BARBER_NAME,
+	LOCALHOST,
 } = process.env;
 
 export const transporter = nodemailer.createTransport({
@@ -19,16 +21,251 @@ export const transporter = nodemailer.createTransport({
 	},
 });
 
+// --- PLANTILLAS MJML ---
+
+const baseStyles = `
+  <mj-style>
+    a.button {
+      background-color: oklch(21.274% 0.0025 247.94);
+      color: white !important;
+      padding: 12px 25px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-block;
+    }
+  </mj-style>
+`;
+
+const getRegisterMJML = (name) => `
+<mjml>
+  <mj-head>${baseStyles}</mj-head>
+  <mj-body background-color="#ededed">
+    <mj-wrapper padding="40px 0">
+      <mj-section background-color="#ffffff" padding="30px">
+        <mj-column>
+          <mj-image width="150px" src="https://i.imgur.com/abV2347.png" alt="${MAILER_BARBER_NAME}" border-radius="50%" />
+          <mj-text font-size="18px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="20px 0 30px 0" align="center">
+            ¡Hola ${name}, gracias por registrarte en ${MAILER_BARBER_NAME}!
+          </mj-text>
+          <mj-button href="${LOCALHOST}/" css-class="button" align="center">
+            Ir a la pagina
+          </mj-button>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>
+`;
+
+const getForgotPasswordMJML = (user, token) => `
+<mjml>
+  <mj-head>${baseStyles}</mj-head>
+  <mj-body background-color="#ededed">
+    <mj-wrapper padding="40px 0">
+      <mj-section background-color="#ffffff" padding="30px">
+        <mj-column>
+          <mj-image width="150px" src="https://i.imgur.com/abV2347.png" alt="${MAILER_BARBER_NAME}" border-radius="50%" />
+          <mj-text font-size="18px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="20px 0 10px 0" align="center">
+            Hola ${user.name},
+          </mj-text>
+          <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
+            Haz solicitado cambiar tu contraseña. Haz clic en el botón de abajo para continuar. Este enlace expirará en 15 minutos.
+          </mj-text>
+          <mj-button href="${LOCALHOST}/changePassword?token=${token}" css-class="button" align="center">
+            Cambiar contraseña
+          </mj-button>
+          <mj-text font-size="12px" color="#666666" font-family="Helvetica, Arial, sans-serif" padding="20px 0 0 0" align="center">
+            Si no solicitaste este cambio, ignora este correo.
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>
+`;
+
+const getChangePasswordMJML = (user) => `
+<mjml>
+  <mj-head>${baseStyles}</mj-head>
+  <mj-body background-color="#ededed">
+    <mj-wrapper padding="40px 0">
+      <mj-section background-color="#ffffff" padding="30px">
+        <mj-column>
+          <mj-image width="150px" src="https://i.imgur.com/abV2347.png" alt="${MAILER_BARBER_NAME}" border-radius="50%" />
+          <mj-text font-size="18px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="20px 0 10px 0" align="center">
+            ¡Hola ${user.name}!
+          </mj-text>
+          <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
+            Tu contraseña ha sido actualizada correctamente.
+          </mj-text>
+          <mj-button href="${LOCALHOST}/login" css-class="button" align="center">
+            Iniciar sesión
+          </mj-button>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>
+`;
+
+const getNewReservationMJML = ({
+	name,
+	service,
+	date,
+	time,
+	worker,
+	token,
+}) => `
+<mjml>
+  <mj-head>
+  	${baseStyles}
+    <mj-style>
+      ul {
+        padding-left: 1em;
+        margin: 0;
+        list-style: none;
+      }
+      li {
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+      a.button {
+        background-color: oklch(21.274% 0.0025 247.94);
+        color: white !important;
+        padding: 12px 25px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        display: inline-block;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#ededed">
+    <mj-wrapper padding="40px 0">
+      <mj-section background-color="#ffffff" padding="30px">
+        <mj-column>
+          <mj-image width="150px" src="https://i.imgur.com/abV2347.png" alt="${MAILER_BARBER_NAME}" border-radius="50%" />
+          <mj-text font-size="18px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="20px 0" align="center">
+            Hola ${name},
+          </mj-text>
+          <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
+            Has reservado un nuevo turno:
+          </mj-text>
+          <mj-text font-size="14px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 10px 0" align="center">
+  <ul style="list-style-type:none; padding-left:0; margin-left:0; text-align:left;">
+    <li style="margin-bottom:8px; padding-left:0;">✂️ <b>Servicio:</b> ${service}</li>
+    <li style="margin-bottom:8px; padding-left:0;">📅 <b>Fecha:</b> ${date}</li>
+    <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
+    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
+  </ul>
+</mj-text>
+          <mj-button href="${LOCALHOST}/cancel?token=${token}" css-class="button" align="center">
+            Cancelar turno
+          </mj-button>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>
+`;
+
+const getCancelReservationMJML = ({ name, service, date, time, worker }) => `
+<mjml>
+  <mj-head>
+    ${baseStyles}
+    <mj-style>
+      ul {
+        padding-left: 1em;
+        margin: 0;
+        list-style: none;
+      }
+      li {
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+      a.button {
+        background-color: oklch(21.274% 0.0025 247.94);
+        color: white !important;
+        padding: 12px 25px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        display: inline-block;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#ededed">
+    <mj-wrapper padding="40px 0">
+      <mj-section background-color="#ffffff" padding="30px">
+        <mj-column>
+          <mj-image width="150px" src="https://i.imgur.com/abV2347.png" alt="${MAILER_BARBER_NAME}" border-radius="50%" />
+          <mj-text font-size="18px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="20px 0" align="center">
+            Hola ${name},
+          </mj-text>
+          <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
+            Has cancelado tu turno:
+          </mj-text>
+          <mj-text font-size="14px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 10px 0" align="center">
+  <ul style="list-style-type:none; padding-left:0; margin-left:0; text-align:left;">
+    <li style="margin-bottom:8px; padding-left:0;">✂️ <b>Servicio:</b> ${service}</li>
+    <li style="margin-bottom:8px; padding-left:0;">📅 <b>Fecha:</b> ${date}</li>
+    <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
+    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
+  </ul>
+</mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>
+`;
+
+const getReminderMJML = ({ name, service, date, time, worker }) => `
+<mjml>
+  <mj-head>${baseStyles}</mj-head>
+  <mj-body background-color="#ededed">
+    <mj-wrapper padding="40px 0">
+      <mj-section background-color="#ffffff" padding="30px">
+        <mj-column>
+          <mj-image width="150px" src="https://i.imgur.com/abV2347.png" alt="${MAILER_BARBER_NAME}" border-radius="50%" />
+          <mj-text font-size="18px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="20px 0" align="center">
+            Hola ${name},
+          </mj-text>
+          <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
+            Este es un recordatorio de tu turno:
+          </mj-text>
+          <mj-text font-size="14px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 10px 0" align="center">
+  <ul style="list-style-type:none; padding-left:0; margin-left:0; text-align:left;">
+    <li style="margin-bottom:8px; padding-left:0;">✂️ <b>Servicio:</b> ${service}</li>
+    <li style="margin-bottom:8px; padding-left:0;">📅 <b>Fecha:</b> ${date}</li>
+    <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
+    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
+  </ul>
+</mj-text>
+          <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="10px 0 0 0" align="center">
+            ¡Te esperamos!
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>
+`;
+
+// --- FUNCIONES DE ENVÍO ---
+
 export const sendRegisterUser = async (name, gmail) => {
+	const mjmlTemplate = getRegisterMJML(name);
+	const { html, errors } = mjml2html(mjmlTemplate);
+	if (errors?.length) console.error("MJML·errors:", errors);
+
 	try {
 		await transporter.sendMail({
 			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-			to: `${gmail}`,
+			to: gmail,
 			subject: `Registro en ${MAILER_BARBER_NAME}`,
-			html: `
-                <h2>Hola ${name}, gracias por registrarte en ${MAILER_BARBER_NAME}</h2>
-                <a href="${process.env.LOCALHOST}/login">Inicia sesion</a>
-            `,
+			html,
 		});
 		return true;
 	} catch (error) {
@@ -42,16 +279,16 @@ export const sendForgotPassword = async (user, gmail) => {
 		expiresIn: "15m",
 	});
 
+	const mjmlTemplate = getForgotPasswordMJML(user, token);
+	const { html, errors } = mjml2html(mjmlTemplate);
+	if (errors?.length) console.error("MJML·errors:", errors);
+
 	try {
 		await transporter.sendMail({
 			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-			to: `${gmail}`,
+			to: gmail,
 			subject: "Cambiar contraseña",
-			html: `
-                <h2>${user.name}, haz click en el siguiente enlace para cambiar tu contraseña: </h2>
-                <a href="${process.env.LOCALHOST}/changePassword?token=${token}">cambiar contraseña </a>
-                <h3>Ente enlace caducara en 15 minutos </h3>
-            `,
+			html,
 		});
 		return true;
 	} catch (error) {
@@ -61,15 +298,16 @@ export const sendForgotPassword = async (user, gmail) => {
 };
 
 export const sendChangePassword = async (user) => {
+	const mjmlTemplate = getChangePasswordMJML(user);
+	const { html, errors } = mjml2html(mjmlTemplate);
+	if (errors?.length) console.error("MJML·errors:", errors);
+
 	try {
 		await transporter.sendMail({
 			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-			to: `${user.gmail}`,
-			subject: "Actualizacion de contraseña",
-			html: `
-                <h2>${user.name} has actualizado tu contraseña</h2>
-                <a href="${process.env.LOCALHOST}/login"> Inicia Sesion </a>
-            `,
+			to: user.gmail,
+			subject: "Actualización de contraseña",
+			html,
 		});
 		return true;
 	} catch (error) {
@@ -78,84 +316,62 @@ export const sendChangePassword = async (user) => {
 	}
 };
 
-export const sendNewReservation = async ({
-	to,
-	name,
-	service,
-	date,
-	time,
-	worker,
-	token,
-}) => {
-	const info = await transporter.sendMail({
-		from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-		to,
-		subject: "Reserva de turno",
-		html: `
-				<h2>Hola ${name}</h2>
-				<p>Haz reservado un nuevo turno:</p>
-				<ul>
-					<li><b>Servicio:</b> ${service}</li>
-					<li><b>Día:</b> ${date}</li>
-					<li><b>Hora:</b> ${time}</li>
-					<li><b>Con:</b> ${worker}</li>
-				</ul>
-				<p>Para cancelarlo haz click en el boton:</p>
-				<a href="${process.env.LOCALHOST}/cancel?token=${token}">Cancelar turno </a>
-			`,
-	});
-	console.log("📧 Nueva reserva enviada:", info.messageId);
+export const sendNewReservation = async (data) => {
+	const mjmlTemplate = getNewReservationMJML(data);
+	const { html, errors } = mjml2html(mjmlTemplate);
+	if (errors?.length) console.error("MJML·errors:", errors);
+
+	try {
+		const info = await transporter.sendMail({
+			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
+			to: data.to,
+			subject: "Reserva de turno",
+			html,
+		});
+		console.log("📧 Nueva reserva enviada:", info.messageId);
+		return true;
+	} catch (error) {
+		console.error(error);
+		return false;
+	}
 };
 
-export const sendCancelReservation = async ({
-	to,
-	name,
-	service,
-	date,
-	time,
-	worker,
-}) => {
-	const info = await transporter.sendMail({
-		from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-		to,
-		subject: "Cancelación de turno",
-		html: `
-				<h2>Hola ${name}</h2>
-				<p>Haz cancelado tu turno:</p>
-				<ul>
-					<li><b>Servicio:</b> ${service}</li>
-					<li><b>Día:</b> ${date}</li>
-					<li><b>Hora:</b> ${time}</li>
-					<li><b>Con:</b> ${worker}</li>
-				</ul>
-			`,
-	});
-	console.log("📧 Cancelacion enviada:", info.messageId);
+export const sendCancelReservation = async (data) => {
+	const mjmlTemplate = getCancelReservationMJML(data);
+	const { html, errors } = mjml2html(mjmlTemplate);
+	if (errors?.length) console.error("MJML·errors:", errors);
+
+	try {
+		const info = await transporter.sendMail({
+			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
+			to: data.to,
+			subject: "Cancelación de turno",
+			html,
+		});
+		console.log("📧 Cancelación enviada:", info.messageId);
+		return true;
+	} catch (error) {
+		console.error(error);
+		return false;
+	}
 };
 
-export const sendGmailReminder = async ({
-	to,
-	name,
-	service,
-	date,
-	time,
-	worker,
-}) => {
-	const info = await transporter.sendMail({
-		from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
-		to,
-		subject: "Recordatorio de tu turno",
-		html: `
-			<h2>Hola ${name}</h2>
-			<p>Este es un recordatorio de tu turno:</p>
-			<ul>
-				<li><b>Servicio:</b> ${service}</li>
-				<li><b>Día:</b> ${date}</li>
-				<li><b>Hora:</b> ${time}</li>
-				<li><b>Con:</b> ${worker}</li>
-			</ul>
-			<p>¡Te esperamos!</p>
-		`,
-	});
-	console.log("📧 Recordatorio enviado: %s", info.messageId);
+export const sendGmailReminder = async (data) => {
+	const mjmlTemplate = getReminderMJML(data);
+	const { html, errors } = mjml2html(mjmlTemplate);
+	if (errors?.length) console.error("MJML·errors:", errors);
+
+	try {
+		const info = await transporter.sendMail({
+			from: `"${MAILER_BARBER_NAME}" <${MAILER_USER}>`,
+			to: data.to,
+			subject: "Recordatorio de tu turno",
+			html,
+		});
+		console.log("📧 Recordatorio enviado:", info.messageId);
+		return true;
+	} catch (error) {
+		console.error(error);
+		return false;
+	}
 };
