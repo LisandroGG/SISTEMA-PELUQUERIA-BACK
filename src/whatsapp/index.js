@@ -4,7 +4,10 @@ import pkg from "whatsapp-web.js";
 const { Client, LocalAuth } = pkg;
 
 const whatsapp = new Client({
-    authStrategy: new LocalAuth()
+    authStrategy: new LocalAuth({
+        clientId: 'user',
+        dataPath: './session'
+    })
 })
 
 whatsapp.on('qr', qr => {
