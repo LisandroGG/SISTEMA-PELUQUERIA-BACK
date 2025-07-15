@@ -155,9 +155,9 @@ const getNewReservationMJML = ({
           <mj-text font-size="14px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 10px 0" align="center">
   <ul style="list-style-type:none; padding-left:0; margin-left:0; text-align:left;">
     <li style="margin-bottom:8px; padding-left:0;">✂️ <b>Servicio:</b> ${service}</li>
+    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
     <li style="margin-bottom:8px; padding-left:0;">📅 <b>Fecha:</b> ${date}</li>
     <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
-    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
   </ul>
 </mj-text>
           <mj-button href="${LOCALHOST}/cancel?token=${token}" css-class="button" align="center">
@@ -209,9 +209,9 @@ const getCancelReservationMJML = ({ name, service, date, time, worker }) => `
           <mj-text font-size="14px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 10px 0" align="center">
   <ul style="list-style-type:none; padding-left:0; margin-left:0; text-align:left;">
     <li style="margin-bottom:8px; padding-left:0;">✂️ <b>Servicio:</b> ${service}</li>
+    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
     <li style="margin-bottom:8px; padding-left:0;">📅 <b>Fecha:</b> ${date}</li>
     <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
-    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
   </ul>
 </mj-text>
         </mj-column>
@@ -238,9 +238,9 @@ const getReminderMJML = ({ name, service, date, time, worker }) => `
           <mj-text font-size="14px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 10px 0" align="center">
   <ul style="list-style-type:none; padding-left:0; margin-left:0; text-align:left;">
     <li style="margin-bottom:8px; padding-left:0;">✂️ <b>Servicio:</b> ${service}</li>
+    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
     <li style="margin-bottom:8px; padding-left:0;">📅 <b>Fecha:</b> ${date}</li>
     <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
-    <li style="margin-bottom:8px; padding-left:0;">💇‍♂️ <b>Profesional:</b> ${worker}</li>
   </ul>
 </mj-text>
           <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="10px 0 0 0" align="center">

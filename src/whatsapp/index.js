@@ -1,0 +1,20 @@
+import qrcode from "qrcode-terminal";
+import pkg from "whatsapp-web.js";
+
+const { Client, LocalAuth } = pkg;
+
+const whatsapp = new Client({
+    authStrategy: new LocalAuth()
+})
+
+whatsapp.on('qr', qr => {
+    qrcode.generate(qr, {
+        small: true
+    })
+})
+
+whatsapp.on('ready', () => {
+    console.log("Usuario listo")
+})
+
+export default whatsapp

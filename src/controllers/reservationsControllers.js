@@ -13,6 +13,7 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
+import { reservationConfirm, reservationCancel } from "../whatsapp/messageTemplates.js";
 
 export const createReservation = async (req, res) => {
 	const {
@@ -144,6 +145,16 @@ export const createReservation = async (req, res) => {
 			worker: fullReservation.worker.name,
 			token: token,
 		});
+
+		await reservationConfirm({
+			name: fullReservation.clientName,
+			phoneNumber: fullReservation.clientPhoneNumber,
+			service: fullReservation.service.name,
+			date: formattedDate,
+			time: formattedTime,
+			worker: fullReservation.worker.name,
+			token: token,
+		})
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
 	} catch (error) {
 		console.error("Error al crear la reserva:", error);
@@ -305,11 +316,20 @@ export const cancelReservation = async (req, res) => {
 			console.log("error al enviar notificacion");
 		}
 
+		await reservationCancel({
+			name: reservation.clientName,
+			phoneNumber: reservation.clientPhoneNumber,
+			service: reservation.service.name,
+			date: formattedDate,
+			time: formattedTime,
+			worker: reservation.worker.name,
+		})
+
 		await reservation.save();
 
 		return res.status(200).json({ message: "Reserva cancelada", reservation });
 	} catch (error) {
 		console.error("Error al cancelar la reserva:", error);
-		return res.status(500).json({ message: "Error del servidor" });
+		return res.status(500).json({ message: "No se pudo cancelar" });
 	}
 };

@@ -9,6 +9,7 @@ import {
 import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
+import { reservationReminder } from "../whatsapp/messageTemplates.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
@@ -44,6 +45,15 @@ cron.schedule("* * * * *", async () => {
 				date: formattedDate,
 				worker: res.worker.name,
 			});
+
+			await reservationReminder({
+				name: res.clientName,
+				phoneNumber: res.clientPhoneNumber,
+				service: res.service.name,
+				date: formattedDate,
+				time: formattedTime,
+				worker: res.worker.name,
+			})
 
 			await res.update({ reminderSent: true });
 			console.log(
