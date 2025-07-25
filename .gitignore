@@ -37,3 +37,8 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# whatsapp-web.js  session data
+.wwebjs_cache/
+session/
+.wwebjs_auth/

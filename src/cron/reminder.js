@@ -10,6 +10,7 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { reservationReminder } from "../whatsapp/messageTemplates.js";
+import { deleteFinishedReservations } from "../controllers/reservationsControllers.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
@@ -62,5 +63,14 @@ cron.schedule("* * * * *", async () => {
 		}
 	} catch (error) {
 		console.error("❌ Error en el cron de recordatorios:", error.message);
+	}
+});
+
+cron.schedule("0 0 1 * *", async () => {
+	try {
+		await deleteFinishedReservations();
+		console.log("✅ Limpieza mensual ejecutada correctamente");
+	} catch (error) {
+		console.error("❌ Error al ejecutar limpieza mensual:", error.message);
 	}
 });

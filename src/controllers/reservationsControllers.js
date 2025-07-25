@@ -333,3 +333,16 @@ export const cancelReservation = async (req, res) => {
 		return res.status(500).json({ message: "No se pudo cancelar" });
 	}
 };
+
+export const deleteFinishedReservations = async () => {
+	try {
+		const deletedCount = await Reservation.destroy({
+			where: { status: "finish" },
+		});
+		console.log(`🧹 Se eliminaron ${deletedCount} reservas finalizadas.`);
+		return deletedCount;
+	} catch (error) {
+		console.error("❌ Error al eliminar reservas finalizadas:", error.message);
+		throw error;
+	}
+};
