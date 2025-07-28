@@ -4,20 +4,20 @@ import pkg from "whatsapp-web.js";
 const { Client, LocalAuth } = pkg;
 
 const whatsapp = new Client({
-    authStrategy: new LocalAuth({
-        clientId: 'user',
-        dataPath: './session'
-    })
-})
+	authStrategy: new LocalAuth({
+		clientId: "user",
+		dataPath: "./session",
+	}),
+});
 
-whatsapp.on('qr', qr => {
-    qrcode.generate(qr, {
-        small: true
-    })
-})
+whatsapp.on("qr", (qr) => {
+	qrcode.generate(qr, {
+		small: true,
+	});
+});
 
-whatsapp.on('ready', () => {
-    console.log("Usuario listo")
-})
+whatsapp.on("ready", () => {
+	console.log("Usuario listo");
+});
 
-export default whatsapp
+export default whatsapp;

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import cron from "node-cron";
 import { Op } from "sequelize";
 import { sendGmailReminder } from "../config/mailer.js";
+import { deleteFinishedReservations } from "../controllers/reservationsControllers.js";
 import {
 	formatDateToLongSpanish,
 	formatTimeToHHMM,
@@ -10,7 +11,6 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { reservationReminder } from "../whatsapp/messageTemplates.js";
-import { deleteFinishedReservations } from "../controllers/reservationsControllers.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
@@ -54,7 +54,7 @@ cron.schedule("* * * * *", async () => {
 				date: formattedDate,
 				time: formattedTime,
 				worker: res.worker.name,
-			})
+			});
 
 			await res.update({ reminderSent: true });
 			console.log(

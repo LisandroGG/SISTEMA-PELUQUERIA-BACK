@@ -35,7 +35,7 @@ async function main() {
 	try {
 		await sequelize.sync({ force: false });
 
-		whatsapp.initialize()
+		whatsapp.initialize();
 
 		app.listen(PORT, () => {
 			console.log(`🚀 Server is listening on port ${PORT}`);
