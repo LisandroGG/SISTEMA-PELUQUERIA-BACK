@@ -8,6 +8,9 @@ const whatsapp = new Client({
 		clientId: "user",
 		dataPath: "./session",
 	}),
+	puppeteer: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+	},
 });
 
 whatsapp.on("qr", (qr) => {
