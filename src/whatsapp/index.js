@@ -9,7 +9,7 @@ const whatsapp = new Client({
 		dataPath: "./session",
 	}),
 	puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+		args: ["--no-sandbox", "--disable-setuid-sandbox"],
 	},
 });
 

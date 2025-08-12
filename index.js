@@ -10,15 +10,25 @@ import whatsapp from "./src/whatsapp/index.js";
 
 dotenv.config();
 
-const { PORT, LOCALHOST } = process.env;
+const { PORT, LOCALHOST, DEPLOY, API_STATUS } = process.env;
 
 const app = express();
 
 app.use(cookieParser());
 
+const allowedOrigins = API_STATUS === "production" ? [DEPLOY] : [LOCALHOST];
+
 app.use(
 	cors({
-		origin: LOCALHOST,
+		origin: (origin, callback) => {
+			if (!origin) return callback(null, true);
+
+			if (allowedOrigins.includes(origin)) {
+				callback(null, true);
+			} else {
+				callback(new Error(`CORS policy: Origen no permitido - ${origin}`));
+			}
+		},
 		credentials: true,
 	}),
 );
