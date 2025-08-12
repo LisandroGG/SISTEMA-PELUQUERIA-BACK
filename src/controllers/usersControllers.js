@@ -12,6 +12,8 @@ const regexPassword =
 	/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
 const regexPhone = /^\+?\d{10,15}$/;
 
+const isProduction = process.env.API_STATUS === "production";
+
 export const registerUser = async (req, res) => {
 	const { name, gmail, phoneNumber, password } = req.body;
 
@@ -107,7 +109,8 @@ export const loginUser = async (req, res) => {
 
 		res.cookie("token", access_token, {
 			httpOnly: true,
-			sameSite: "Lax",
+			sameSite: isProduction ? "none" : "lax",
+			secure: isProduction,
 			maxAge: 2 * 60 * 60 * 1000,
 		});
 
@@ -163,7 +166,8 @@ export const refreshAccessToken = async (req, res) => {
 
 		res.cookie("token", newAccessToken, {
 			httpOnly: true,
-			sameSite: "Lax",
+			sameSite: isProduction ? "none" : "lax",
+			secure: isProduction,
 			maxAge: 2 * 60 * 60 * 1000,
 		});
 
