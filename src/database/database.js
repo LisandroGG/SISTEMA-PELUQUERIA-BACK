@@ -7,30 +7,38 @@ dotenv.config();
 const { DB_NAME, DB_HOST, DB_PASSWORD, DB_USER, DB_URL, API_STATUS } =
 	process.env;
 
-export const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
-	host: DB_HOST,
-	dialect: "postgres",
-	protocol: "postgres",
-	dialectModule: pg,
-	logging: console.log,
-	dialectOptions:
-		API_STATUS === "production"
-			? {
+export const sequelize =
+	API_STATUS === "production"
+		? new Sequelize(DB_URL, {
+				dialect: "postgres",
+				protocol: "postgres",
+				dialectModule: pg,
+				logging: console.log,
+				dialectOptions: {
 					ssl: {
 						require: true,
 						rejectUnauthorized: false,
 					},
-				}
-			: {},
-});
+				},
+			})
+		: new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
+				host: DB_HOST,
+				dialect: "postgres",
+				protocol: "postgres",
+				dialectModule: pg,
+				logging: console.log,
+				dialectOptions: {},
+			});
 
-try {
-	await sequelize.authenticate();
-	console.log("DB CONNECT");
+(async () => {
+	try {
+		await sequelize.authenticate();
+		console.log("DB CONNECT");
 
-	console.log("SYNC MODELS");
-	await sequelize.sync({ alter: false });
-	console.log("MODELS CONNECT");
-} catch (error) {
-	console.log("DB CONNECT ERRO", error);
-}
+		console.log("SYNC MODELS");
+		await sequelize.sync({ alter: false });
+		console.log("MODELS CONNECT");
+	} catch (error) {
+		console.log("DB CONNECT ERROR", error);
+	}
+})();
