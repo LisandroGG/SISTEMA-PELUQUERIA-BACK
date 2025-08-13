@@ -1,5 +1,4 @@
 import { addMinutes, format, isBefore, parseISO, startOfDay } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
 import { es } from "date-fns/locale";
 import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
@@ -30,9 +29,8 @@ export const createReservation = async (req, res) => {
 		clientPhoneNumber,
 	} = req.body;
 	try {
-		const timeZone = "America/Argentina/Buenos_Aires";
 		const parsedDate = parseISO(date);
-		const now = toZonedTime(new Date(), timeZone);
+		const now = new Date();
 
 		if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 			return res
@@ -87,7 +85,7 @@ export const createReservation = async (req, res) => {
 			end = working.endTime;
 		}
 
-		const startDateTime = toZonedTime(new Date(`${date}T${startTime}`), timeZone);
+		const startDateTime = new Date(`${date}T${startTime}`);
 		const serviceEndTime = addMinutes(startDateTime, serviceDuration);
 
 		const overlapping = await Reservation.findOne({
@@ -118,10 +116,8 @@ export const createReservation = async (req, res) => {
 			clientPhoneNumber,
 		});
 
-		const cancelStartDateTime = toZonedTime(
-			new Date(`${reservation.date}T${reservation.startTime}`),
-			timeZone
-		);
+		const cancelStartDateTime = new Date(
+			`${reservation.date}T${reservation.startTime}`,)
 		const expirationTime = new Date(
 			cancelStartDateTime.getTime() - 60 * 60 * 1000,
 		);

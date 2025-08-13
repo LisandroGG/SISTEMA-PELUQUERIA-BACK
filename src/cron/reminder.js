@@ -15,12 +15,8 @@ import { reservationReminder } from "../whatsapp/messageTemplates.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
-		const timeZone = "America/Argentina/Buenos_Aires";
-		const now = toZonedTime(new Date(), timeZone);
-		const oneHourLater = toZonedTime(
-			new Date(now.getTime() + 60 * 60 * 1000),
-			timeZone
-		);
+		const now = new Date();
+		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
 		const reservations = await Reservation.findAll({
 			where: {
