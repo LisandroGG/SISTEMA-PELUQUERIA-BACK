@@ -14,14 +14,13 @@ import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { reservationReminder } from "../whatsapp/messageTemplates.js";
 
+const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
+
 cron.schedule("* * * * *", async () => {
 	try {
-		const now = new Date();
-		const serverTimeFormatted = format(now, "yyyy-MM-dd HH:mm:ss", { locale: es });
-		const argentinaTime = toZonedTime(now, "America/Argentina/Buenos_Aires");
-		const argentinaTimeFormatted = format(argentinaTime, "yyyy-MM-dd HH:mm:ss", { locale: es });
-		console.log("Hora de Argentina:", argentinaTimeFormatted)
-		console.log("Hora del servidor:", serverTimeFormatted)
+		const now = toZonedTime(new Date(), ARG_TIMEZONE);
+		const argentinaTimeFormatted = format(now, "yyyy-MM-dd HH:mm:ss", { locale: es });
+		console.log("Hora de Argentina:", argentinaTimeFormatted);
 		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
 		const reservations = await Reservation.findAll({
