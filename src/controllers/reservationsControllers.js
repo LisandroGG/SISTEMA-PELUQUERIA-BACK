@@ -137,26 +137,34 @@ export const createReservation = async (req, res) => {
 
 		const formattedDate = formatDateToLongSpanish(fullReservation.date);
 		const formattedTime = formatTimeToHHMM(fullReservation.startTime);
+		
+		try {
+			await sendNewReservation({
+				to: fullReservation.clientGmail,
+				name: fullReservation.clientName,
+				service: fullReservation.service.name,
+				time: formattedTime,
+				date: formattedDate,
+				worker: fullReservation.worker.name,
+				token: token,
+			});
+		} catch (error) {
+			console.log("Error al enviar mensaje de reserva al gmail")
+		}
 
-		await sendNewReservation({
-			to: fullReservation.clientGmail,
-			name: fullReservation.clientName,
-			service: fullReservation.service.name,
-			time: formattedTime,
-			date: formattedDate,
-			worker: fullReservation.worker.name,
-			token: token,
-		});
-
-		await reservationConfirm({
-			name: fullReservation.clientName,
-			phoneNumber: fullReservation.clientPhoneNumber,
-			service: fullReservation.service.name,
-			date: formattedDate,
-			time: formattedTime,
-			worker: fullReservation.worker.name,
-			token: token,
-		});
+		try {
+			await reservationConfirm({
+				name: fullReservation.clientName,
+				phoneNumber: fullReservation.clientPhoneNumber,
+				service: fullReservation.service.name,
+				date: formattedDate,
+				time: formattedTime,
+				worker: fullReservation.worker.name,
+				token: token,
+			});
+		} catch (error) {
+			console.log("Error al enviar mensaje de reserva al whatsapp")
+		}
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
 	} catch (error) {
 		console.error("Error al crear la reserva:", error);
@@ -305,27 +313,30 @@ export const cancelReservation = async (req, res) => {
 		const formattedDate = formatDateToLongSpanish(reservation.date);
 		const formattedTime = formatTimeToHHMM(reservation.startTime);
 
-		const sendGmail = await sendCancelReservation({
-			to: reservation.clientGmail,
-			name: reservation.clientName,
-			service: reservation.service.name,
-			time: formattedTime,
-			date: formattedDate,
-			worker: reservation.worker.name,
-		});
-
-		if (sendGmail) {
-			console.log("error al enviar notificacion");
+		try {
+			await sendCancelReservation({
+				to: reservation.clientGmail,
+				name: reservation.clientName,
+				service: reservation.service.name,
+				time: formattedTime,
+				date: formattedDate,
+				worker: reservation.worker.name,
+			});
+		} catch (error) {
+			console.log("Error al enviar mensaje de cancelacion al gmail")
 		}
-
-		await reservationCancel({
-			name: reservation.clientName,
-			phoneNumber: reservation.clientPhoneNumber,
-			service: reservation.service.name,
-			date: formattedDate,
-			time: formattedTime,
-			worker: reservation.worker.name,
-		});
+		try {
+			await reservationCancel({
+				name: reservation.clientName,
+				phoneNumber: reservation.clientPhoneNumber,
+				service: reservation.service.name,
+				date: formattedDate,
+				time: formattedTime,
+				worker: reservation.worker.name,
+			});
+		} catch (error) {
+			console.log("Error al enviar mensaje de cancelacion al whatsapp")
+		}
 
 		await reservation.save();
 

@@ -11,14 +11,12 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { reservationReminder } from "../whatsapp/messageTemplates.js";
-import { toArgentinaTime } from "../helpers/format.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
 		const now = new Date();
-		const argentinaTime = toArgentinaTime(now);
 
-		console.log("Hora de Argentina:", argentinaTime);
+		console.log("Hora del servidor:", now)
 		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
 		const reservations = await Reservation.findAll({
