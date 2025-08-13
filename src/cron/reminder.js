@@ -18,7 +18,7 @@ cron.schedule("* * * * *", async () => {
 	try {
 		const now = new Date();
 		const serverTimeFormatted = format(now, "yyyy-MM-dd HH:mm:ss", { locale: es });
-		const argentinaTime = utcToZonedTime(now, "America/Argentina/Buenos_Aires");
+		const argentinaTime = toZonedTime(now, "America/Argentina/Buenos_Aires");
 		const argentinaTimeFormatted = format(argentinaTime, "yyyy-MM-dd HH:mm:ss", { locale: es });
 		console.log("Hora de Argentina:", argentinaTimeFormatted)
 		console.log("Hora del servidor:", serverTimeFormatted)
