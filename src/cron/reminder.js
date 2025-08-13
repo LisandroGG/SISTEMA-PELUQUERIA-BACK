@@ -16,6 +16,7 @@ import { reservationReminder } from "../whatsapp/messageTemplates.js";
 cron.schedule("* * * * *", async () => {
 	try {
 		const now = new Date();
+		console.log("Hora del servidor:", now)
 		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
 		const reservations = await Reservation.findAll({
