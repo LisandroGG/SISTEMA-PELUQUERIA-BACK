@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 import cron from "node-cron";
 import { Op } from "sequelize";
 import { sendGmailReminder } from "../config/mailer.js";
@@ -14,8 +15,12 @@ import { reservationReminder } from "../whatsapp/messageTemplates.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
-		const now = new Date();
-		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+		const timeZone = "America/Argentina/Buenos_Aires";
+		const now = utcToZonedTime(new Date(), timeZone);
+		const oneHourLater = utcToZonedTime(
+			new Date(now.getTime() + 60 * 60 * 1000),
+			timeZone
+		);
 
 		const reservations = await Reservation.findAll({
 			where: {
@@ -36,8 +41,11 @@ cron.schedule("* * * * *", async () => {
 		});
 
 		for (const res of reservations) {
+			await res.update({ reminderSent: true });
+			
 			const formattedDate = formatDateToLongSpanish(res.date);
 			const formattedTime = formatTimeToHHMM(res.startTime);
+
 			await sendGmailReminder({
 				to: res.clientGmail,
 				name: res.clientName,
@@ -56,7 +64,6 @@ cron.schedule("* * * * *", async () => {
 				worker: res.worker.name,
 			});
 
-			await res.update({ reminderSent: true });
 			console.log(
 				`🔔 Enviado recordatorio a ${res.clientGmail} para ${res.date} ${res.startTime}`,
 			);

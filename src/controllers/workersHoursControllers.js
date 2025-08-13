@@ -9,6 +9,7 @@ import {
 	parseISO,
 	startOfDay,
 } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 import { es } from "date-fns/locale";
 import { Op } from "sequelize";
 import { Sequelize } from "sequelize";
@@ -264,8 +265,9 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
+	const timeZone = "America/Argentina/Buenos_Aires";
 	const parsedDate = parseISO(date);
-	const now = new Date();
+	const now = utcToZonedTime(new Date(), timeZone);
 
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 		return {
