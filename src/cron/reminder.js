@@ -17,9 +17,11 @@ import { reservationReminder } from "../whatsapp/messageTemplates.js";
 cron.schedule("* * * * *", async () => {
 	try {
 		const now = new Date();
-		const argentinaTime = toZonedTime(now, "America/Argentina/Buenos_Aires");
-		console.log("Hora de Argentina:", format(argentinaTime, "yyyy-MM-dd HH:mm:ss", { locale: es }));
-		console.log("Hora del servidor:", now)
+		const serverTimeFormatted = format(now, "yyyy-MM-dd HH:mm:ss", { locale: es });
+		const argentinaTime = utcToZonedTime(now, "America/Argentina/Buenos_Aires");
+		const argentinaTimeFormatted = format(argentinaTime, "yyyy-MM-dd HH:mm:ss", { locale: es });
+		console.log("Hora de Argentina:", argentinaTimeFormatted)
+		console.log("Hora del servidor:", serverTimeFormatted)
 		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
 		const reservations = await Reservation.findAll({
