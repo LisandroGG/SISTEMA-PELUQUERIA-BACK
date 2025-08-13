@@ -1,5 +1,4 @@
 import { format } from "date-fns";
-import { utcToZonedTime, format as tzFormat } from "date-fns-tz";
 import cron from "node-cron";
 import { Op } from "sequelize";
 import { sendGmailReminder } from "../config/mailer.js";
@@ -12,12 +11,14 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { reservationReminder } from "../whatsapp/messageTemplates.js";
+import { toArgentinaTime } from "../helpers/format.js";
 
 cron.schedule("* * * * *", async () => {
 	try {
 		const now = new Date();
-		const argentinaTime = utcToZonedTime(now, "America/Argentina/Buenos_Aires");
-		console.log("Hora del servidor:", argentinaTime)
+		const argentinaTime = toArgentinaTime(now);
+
+		console.log("Hora de Argentina:", argentinaTime);
 		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
 		const reservations = await Reservation.findAll({

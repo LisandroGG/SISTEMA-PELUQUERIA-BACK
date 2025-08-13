@@ -10,3 +10,7 @@ export const formatDateToLongSpanish = (date) => {
 export const formatTimeToHHMM = (timeString) => {
 	return timeString.slice(0, 5);
 };
+
+export const toArgentinaTime = (date = new Date()) => {
+  return new Date(date.toLocaleString("es-AR", { timeZone }));
+};
