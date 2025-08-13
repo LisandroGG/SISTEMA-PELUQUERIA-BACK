@@ -9,7 +9,7 @@ import {
 	parseISO,
 	startOfDay,
 } from "date-fns";
-import * as tz from "date-fns-tz";
+import { toZonedTime } from "date-fns-tz";
 import { es } from "date-fns/locale";
 import { Op } from "sequelize";
 import { Sequelize } from "sequelize";
@@ -236,7 +236,7 @@ export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 	const timeZone = "America/Argentina/Buenos_Aires";
 
-	const today = tz.utcToZonedTime(new Date(), timeZone);
+	const today = toZonedTime(new Date(), timeZone);
 	const blockedDays = [];
 	const daysToCheck = 65;
 
@@ -267,8 +267,8 @@ export const getWorkerAvailableHours = async ({
 	date,
 }) => {
 	const timeZone = "America/Argentina/Buenos_Aires";
-	const parsedDate = tz.utcToZonedTime(parseISO(date), timeZone);
-	const now = tz.utcToZonedTime(new Date(), timeZone);
+	const parsedDate = toZonedTime(parseISO(date), timeZone);
+	const now = toZonedTime(new Date(), timeZone);
 
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 		return {
@@ -321,8 +321,8 @@ export const getWorkerAvailableHours = async ({
 	const shouldFilterPastTimes = isToday(parsedDate);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-		let currentStart = tz.utcToZonedTime(new Date(`${date}T${startTimeStr}`), timeZone);
-		const endTime = tz.utcToZonedTime(new Date(`${date}T${endTimeStr}`), timeZone);
+		let currentStart = toZonedTime(new Date(`${date}T${startTimeStr}`), timeZone);
+		const endTime = toZonedTime(new Date(`${date}T${endTimeStr}`), timeZone);
 
 		while (currentStart < endTime) {
 			const slotEndTime = addMinutes(currentStart, serviceDuration);
@@ -363,13 +363,13 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	const reservedRanges = existingReservations.map((res) => {
-		const resStart = tz.utcToZonedTime(parse(`${res.startTime}`, "HH:mm:ss", new Date(`${date}T00:00`)), timeZone);
-		const resEnd = tz.utcToZonedTime(parse(`${res.endTime}`, "HH:mm:ss", new Date(`${date}T00:00`)), timeZone);
+		const resStart = toZonedTime(parse(`${res.startTime}`, "HH:mm:ss", new Date(`${date}T00:00`)), timeZone);
+		const resEnd = toZonedTime(parse(`${res.endTime}`, "HH:mm:ss", new Date(`${date}T00:00`)), timeZone);
 		return { resStart, resEnd };
 	});
 
 	const availableSlots = timeSlots.filter((slot) => {
-		const slotStart = tz.utcToZonedTime(
+		const slotStart = toZonedTime(
 			parse(slot.startTime, "HH:mm", new Date(`${date}T00:00`)),
 			timeZone
 		);
@@ -387,8 +387,8 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	availableSlots.sort((a, b) => {
-		const timeA = tz.utcToZonedTime(new Date(`1970-01-01T${a.startTime}:00`), timeZone);
-		const timeB = tz.utcToZonedTime(new Date(`1970-01-01T${b.startTime}:00`), timeZone);
+		const timeA = toZonedTime(new Date(`1970-01-01T${a.startTime}:00`), timeZone);
+		const timeB = toZonedTime(new Date(`1970-01-01T${b.startTime}:00`), timeZone);
 		return timeA - timeB;
 	});
 
