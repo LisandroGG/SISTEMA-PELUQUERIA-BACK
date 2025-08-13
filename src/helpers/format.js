@@ -1,15 +1,15 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { utcToZonedTime } from "date-fns-tz";
+import * as tz from "date-fns-tz";
 
 const timeZone = "America/Argentina/Buenos_Aires";
 
 export const formatDateToLongSpanish = (date) => {
-	const zonedDate = utcToZonedTime(new Date(date), timeZone);
+	const zonedDate = tz.utcToZonedTime(new Date(date), timeZone);
 	return format(zonedDate, "d 'de' MMMM 'de' yyyy", { locale: es });
 };
 
 export const formatTimeToHHMM = (timeString) => {
-	const zonedDate = utcToZonedTime(new Date(`1970-01-01T${timeString}`), timeZone);
+	const zonedDate = tz.utcToZonedTime(new Date(`1970-01-01T${timeString}`), timeZone);
 	return format(zonedDate, "HH:mm");
 };
