@@ -237,7 +237,7 @@ export const getHoursByDate = async (req, res) => {
 export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 
-	const today = new Date();
+	const today = toZonedTime(new Date(), ARG_TIMEZONE);
 	const blockedDays = [];
 	const daysToCheck = 65;
 
@@ -267,7 +267,7 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
-	const parsedDate = parseISO(date);
+	const parsedDate = toZonedTime(parseISO(date), ARG_TIMEZONE);
 	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
