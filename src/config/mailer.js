@@ -9,11 +9,7 @@ const {
 	MAILER_PASSWORD,
 	MAILER_BARBER_NAME,
 	LOCALHOST,
-  DEPLOY,
-  API_STATUS,
 } = process.env;
-
-const BASE_URL = API_STATUS === "production" ? DEPLOY : LOCALHOST;
 
 export const transporter = nodemailer.createTransport({
 	host: MAILER_HOST,
@@ -52,7 +48,7 @@ const getRegisterMJML = (name) => `
           <mj-text font-size="18px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="20px 0 30px 0" align="center">
             ¡Hola ${name}, gracias por registrarte en ${MAILER_BARBER_NAME}!
           </mj-text>
-          <mj-button href="${BASE_URL}/" css-class="button" align="center">
+          <mj-button href="${LOCALHOST}/" css-class="button" align="center">
             Ir a la pagina
           </mj-button>
         </mj-column>
@@ -76,7 +72,7 @@ const getForgotPasswordMJML = (user, token) => `
           <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
             Haz solicitado cambiar tu contraseña. Haz clic en el botón de abajo para continuar. Este enlace expirará en 15 minutos.
           </mj-text>
-          <mj-button href="${BASE_URL}/users/changePassword?token=${token}" css-class="button" align="center">
+          <mj-button href="${LOCALHOST}/changePassword?token=${token}" css-class="button" align="center">
             Cambiar contraseña
           </mj-button>
           <mj-text font-size="12px" color="#666666" font-family="Helvetica, Arial, sans-serif" padding="20px 0 0 0" align="center">
@@ -103,7 +99,7 @@ const getChangePasswordMJML = (user) => `
           <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
             Tu contraseña ha sido actualizada correctamente.
           </mj-text>
-          <mj-button href="${BASE_URL}/login" css-class="button" align="center">
+          <mj-button href="${LOCALHOST}/login" css-class="button" align="center">
             Iniciar sesión
           </mj-button>
         </mj-column>
@@ -164,7 +160,7 @@ const getNewReservationMJML = ({
     <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
   </ul>
 </mj-text>
-          <mj-button href="${BASE_URL}/reservations/cancel?token=${token}" css-class="button" align="center">
+          <mj-button href="${LOCALHOST}/cancel?token=${token}" css-class="button" align="center">
             Cancelar turno
           </mj-button>
         </mj-column>
