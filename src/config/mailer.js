@@ -76,7 +76,7 @@ const getForgotPasswordMJML = (user, token) => `
           <mj-text font-size="16px" color="#000000" font-family="Helvetica, Arial, sans-serif" padding="0 0 20px 0" align="center">
             Haz solicitado cambiar tu contraseña. Haz clic en el botón de abajo para continuar. Este enlace expirará en 15 minutos.
           </mj-text>
-          <mj-button href="${BASE_URL}/changePassword?token=${token}" css-class="button" align="center">
+          <mj-button href="${BASE_URL}/users/changePassword?token=${token}" css-class="button" align="center">
             Cambiar contraseña
           </mj-button>
           <mj-text font-size="12px" color="#666666" font-family="Helvetica, Arial, sans-serif" padding="20px 0 0 0" align="center">
@@ -164,7 +164,7 @@ const getNewReservationMJML = ({
     <li style="margin-bottom:8px; padding-left:0;">🕛 <b>Hora:</b> ${time}</li>
   </ul>
 </mj-text>
-          <mj-button href="${BASE_URL}/cancel?token=${token}" css-class="button" align="center">
+          <mj-button href="${BASE_URL}/reservations/cancel?token=${token}" css-class="button" align="center">
             Cancelar turno
           </mj-button>
         </mj-column>
