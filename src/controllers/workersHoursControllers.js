@@ -18,6 +18,9 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
+import { toZonedTime } from "date-fns-tz";
+
+const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export const createWorkingHour = async (req, res) => {
 	const hours = req.body;
@@ -234,7 +237,7 @@ export const getHoursByDate = async (req, res) => {
 export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 
-	const today = new Date();
+	const today = toZonedTime(new Date(), ARG_TIMEZONE);
 	const blockedDays = [];
 	const daysToCheck = 65;
 
@@ -265,9 +268,10 @@ export const getWorkerAvailableHours = async ({
 	date,
 }) => {
 	const parsedDate = parseISO(date);
-	const now = new Date();
+	const parsedDateInAr = toZonedTime(parsedDate, ARG_TIMEZONE)
+	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
-	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
+	if (isBefore(startOfDay(parsedDateInAr), startOfDay(now))) {
 		return {
 			source: "past",
 			message: "No se pueden consultar horarios de fechas pasadas",
@@ -275,7 +279,7 @@ export const getWorkerAvailableHours = async ({
 		};
 	}
 
-	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
+	const dayOfWeek = format(parsedDateInAr, "eeee", { locale: es });
 
 	const service = await Service.findByPk(serviceId, {
 		include: [{ model: Worker, as: "Workers" }],
@@ -315,7 +319,7 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	const timeSlots = [];
-	const shouldFilterPastTimes = isToday(parsedDate);
+	const shouldFilterPastTimes = isToday(parsedDateInAr);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
 		let currentStart = new Date(`${date}T${startTimeStr}`);
