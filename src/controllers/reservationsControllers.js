@@ -17,6 +17,9 @@ import {
 	reservationCancel,
 	reservationConfirm,
 } from "../whatsapp/messageTemplates.js";
+import { toZonedTime } from "date-fns-tz";
+
+const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export const createReservation = async (req, res) => {
 	const {
@@ -29,8 +32,8 @@ export const createReservation = async (req, res) => {
 		clientPhoneNumber,
 	} = req.body;
 	try {
-		const parsedDate = parseISO(date);
-		const now = new Date();
+		const now = toZonedTime(new Date(), ARG_TIMEZONE);
+		const parsedDate = toZonedTime(parseISO(date), ARG_TIMEZONE);
 
 		if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 			return res
@@ -85,7 +88,10 @@ export const createReservation = async (req, res) => {
 			end = working.endTime;
 		}
 
-		const startDateTime = new Date(`${date}T${startTime}`);
+		const startDateTime = toZonedTime(
+			new Date(`${date}T${startTime}`),
+			ARG_TIMEZONE
+		);
 		const serviceEndTime = addMinutes(startDateTime, serviceDuration);
 
 		const overlapping = await Reservation.findOne({
@@ -116,8 +122,10 @@ export const createReservation = async (req, res) => {
 			clientPhoneNumber,
 		});
 
-		const cancelStartDateTime = new Date(
-			`${reservation.date}T${reservation.startTime}`,)
+		const cancelStartDateTime = toZonedTime(
+			new Date(`${reservation.date}T${reservation.startTime}`),
+			ARG_TIMEZONE
+		);
 		const expirationTime = new Date(
 			cancelStartDateTime.getTime() - 60 * 60 * 1000,
 		);

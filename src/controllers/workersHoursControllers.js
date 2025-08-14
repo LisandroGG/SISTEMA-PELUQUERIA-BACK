@@ -10,6 +10,7 @@ import {
 	startOfDay,
 } from "date-fns";
 import { es } from "date-fns/locale";
+import { toZonedTime } from "date-fns-tz";
 import { Op } from "sequelize";
 import { Sequelize } from "sequelize";
 import { CustomWorkingHour } from "../models/customWorkingHours.js";
@@ -18,6 +19,8 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
+
+const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export const createWorkingHour = async (req, res) => {
 	const hours = req.body;
@@ -233,7 +236,6 @@ export const getHoursByDate = async (req, res) => {
 
 export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
-	const timeZone = "America/Argentina/Buenos_Aires";
 
 	const today = new Date();
 	const blockedDays = [];
@@ -266,7 +268,7 @@ export const getWorkerAvailableHours = async ({
 	date,
 }) => {
 	const parsedDate = parseISO(date);
-	const now = new Date();
+	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 		return {
@@ -319,8 +321,14 @@ export const getWorkerAvailableHours = async ({
 	const shouldFilterPastTimes = isToday(parsedDate);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-		let currentStart = new Date(`${date}T${startTimeStr}`);
-		const endTime = new Date(`${date}T${endTimeStr}`);
+		let currentStart = toZonedTime(
+			new Date(`${date}T${startTimeStr}`),
+			ARG_TIMEZONE
+		);
+		const endTime = toZonedTime(
+			new Date(`${date}T${endTimeStr}`),
+			ARG_TIMEZONE
+		);
 
 		while (currentStart < endTime) {
 			const slotEndTime = addMinutes(currentStart, serviceDuration);
