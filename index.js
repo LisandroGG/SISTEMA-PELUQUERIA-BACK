@@ -35,10 +35,6 @@ app.use(
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
-	res.send("server Working 🚀");
-});
-
 app.use("/", mainRouter);
 
 async function main() {

@@ -8,6 +8,10 @@ import { workersHoursRouter } from "./workersHours.js";
 
 export const mainRouter = Router();
 
+mainRouter.get("/", (req, res) => {
+    res.send("Server Working");
+});
+
 mainRouter.use("/users", usersRouter);
 mainRouter.use("/workers", workersRouter);
 mainRouter.use("/services", servicesRouter);
