@@ -268,8 +268,7 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
-	const parsedDate = parseISO(date);
-	const parsedDateLocal = toZonedTime(parsedDate, ARG_TIMEZONE)
+	const parsedDateLocal = toZonedTime(parseISO(date), ARG_TIMEZONE);
 	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
 	console.log("Fechas enviadas:", now, parsedDateLocal)
