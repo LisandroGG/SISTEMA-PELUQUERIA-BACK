@@ -277,7 +277,7 @@ export const getWorkerAvailableHours = async ({
  return { source: "past", message: "No se pueden consultar fechas pasadas", timeSlots: [] };
 }
 
-	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
+	const dayOfWeek = format(parsedDateLocal, "eeee", { locale: es });
 
 	const service = await Service.findByPk(serviceId, {
 		include: [{ model: Worker, as: "Workers" }],
@@ -317,7 +317,7 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	const timeSlots = [];
-	const shouldFilterPastTimes = isToday(parsedDate);
+	const shouldFilterPastTimes = isToday(parsedDateLocal);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
 		let currentStart = toZonedTime(new Date(`${date}T${startTimeStr}`), ARG_TIMEZONE);
