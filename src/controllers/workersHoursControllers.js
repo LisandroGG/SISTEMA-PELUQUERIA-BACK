@@ -10,7 +10,7 @@ import {
 	startOfDay,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { DATE, Op } from "sequelize";
+import { Op } from "sequelize";
 import { Sequelize } from "sequelize";
 import { CustomWorkingHour } from "../models/customWorkingHours.js";
 import { DisableDay } from "../models/disableDays.js";
@@ -18,10 +18,6 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
-
-const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
-
-import { toZonedTime } from "date-fns-tz";
 
 export const createWorkingHour = async (req, res) => {
 	const hours = req.body;
@@ -268,16 +264,18 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
-	const parsedDateLocal = toZonedTime(parseISO(date), ARG_TIMEZONE);
-	const now = toZonedTime(new Date(), ARG_TIMEZONE);
+	const parsedDate = parseISO(date);
+	const now = new Date();
 
-	console.log("Fechas enviadas:", now, parsedDateLocal)
+	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
+		return {
+			source: "past",
+			message: "No se pueden consultar horarios de fechas pasadas",
+			timeSlots: [],
+		};
+	}
 
-	if (isBefore(startOfDay(parsedDateLocal), startOfDay(now))) {	
- return { source: "past", message: "No se pueden consultar fechas pasadas", timeSlots: [] };
-}
-
-	const dayOfWeek = format(parsedDateLocal, "eeee", { locale: es });
+	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
 
 	const service = await Service.findByPk(serviceId, {
 		include: [{ model: Worker, as: "Workers" }],
@@ -317,11 +315,11 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	const timeSlots = [];
-	const shouldFilterPastTimes = isToday(parsedDateLocal);
+	const shouldFilterPastTimes = isToday(parsedDate);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-		let currentStart = toZonedTime(new Date(`${date}T${startTimeStr}`), ARG_TIMEZONE);
-		const endTime = toZonedTime(new Date(`${date}T${endTimeStr}`), ARG_TIMEZONE);
+		let currentStart = new Date(`${date}T${startTimeStr}`);
+		const endTime = new Date(`${date}T${endTimeStr}`);
 
 		while (currentStart < endTime) {
 			const slotEndTime = addMinutes(currentStart, serviceDuration);
