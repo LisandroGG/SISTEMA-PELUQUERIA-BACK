@@ -273,13 +273,16 @@ export const getWorkerAvailableHours = async ({
 	const nowInAR = toZonedTime(new Date(), timeZone);
 	console.log("en argentina:", format(nowInAR, "yyyy-mm-dd hh:mm:ss", { timeZone }))
 
-	if (isBefore(startOfDay(parsedDateInAR), startOfDay(nowInAR))) {
-		return {
-			source: "past",
-			message: "No se pueden consultar horarios de fechas pasadas",
-			timeSlots: [],
-		};
-	}
+	const todayInAR = new Date(nowInAR.getFullYear(), nowInAR.getMonth(), nowInAR.getDate());
+	const queryDateInAR = new Date(parsedDateInAR.getFullYear(), parsedDateInAR.getMonth(), parsedDateInAR.getDate());
+
+if (queryDateInAR < todayInAR) {
+  return {
+    source: "past",
+    message: "No se pueden consultar horarios de fechas pasadas",
+    timeSlots: [],
+  };
+}
 
 	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
 
