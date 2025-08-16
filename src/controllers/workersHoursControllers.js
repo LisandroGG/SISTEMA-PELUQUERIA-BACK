@@ -8,10 +8,9 @@ import {
 	parse,
 	parseISO,
 	startOfDay,
-	isSameDay
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { Op } from "sequelize";
+import { DATE, Op } from "sequelize";
 import { Sequelize } from "sequelize";
 import { CustomWorkingHour } from "../models/customWorkingHours.js";
 import { DisableDay } from "../models/disableDays.js";
@@ -19,9 +18,10 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
-import { toZonedTime } from "date-fns-tz";
 
-const timeZone = "America/Argentina/Buenos_Aires";
+const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
+
+import { toZonedTime } from "date-fns-tz";
 
 export const createWorkingHour = async (req, res) => {
 	const hours = req.body;
@@ -268,20 +268,14 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
-	const parsedDate = parse(date, "yyyy-MM-dd", new Date()); 
-	const parsedDateInAR = toZonedTime(parsedDate, timeZone);
-	const nowInAR = toZonedTime(new Date(), timeZone);
-	console.log("en argentina:", format(nowInAR, "yyyy-mm-dd hh:mm:ss", { timeZone }))
+	const parsedDate = parseISO(date);
+	const parsedDateLocal = toZonedTime(parsedDate, ARG_TIMEZONE)
+	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
-	const todayInAR = new Date(nowInAR.getFullYear(), nowInAR.getMonth(), nowInAR.getDate());
-	const queryDateInAR = new Date(parsedDateInAR.getFullYear(), parsedDateInAR.getMonth(), parsedDateInAR.getDate());
+	console.log("Fechas enviadas:", now, parsedDateLocal)
 
-if (queryDateInAR < todayInAR) {
-  return {
-    source: "past",
-    message: "No se pueden consultar horarios de fechas pasadas",
-    timeSlots: [],
-  };
+	if (isBefore(startOfDay(parsedDateLocal), startOfDay(now))) {	
+ return { source: "past", message: "No se pueden consultar fechas pasadas", timeSlots: [] };
 }
 
 	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
@@ -324,21 +318,24 @@ if (queryDateInAR < todayInAR) {
 	});
 
 	const timeSlots = [];
+	const shouldFilterPastTimes = isToday(parsedDate);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-	let currentStart = new Date(`${date}T${startTimeStr}`);
-	const endTime = new Date(`${date}T${endTimeStr}`);
+		let currentStart = toZonedTime(new Date(`${date}T${startTimeStr}`), ARG_TIMEZONE);
+		const endTime = toZonedTime(new Date(`${date}T${endTimeStr}`), ARG_TIMEZONE);
 
-	while (currentStart < endTime) {
-		const slotEndTime = addMinutes(currentStart, serviceDuration);
-		if (slotEndTime <= endTime) {
-			timeSlots.push({
-				startTime: format(currentStart, "HH:mm"),
-			});
+		while (currentStart < endTime) {
+			const slotEndTime = addMinutes(currentStart, serviceDuration);
+			if (slotEndTime <= endTime) {
+				if (!shouldFilterPastTimes || isAfter(currentStart, now)) {
+					timeSlots.push({
+						startTime: format(currentStart, "HH:mm"),
+					});
+				}
+			}
+			currentStart = addMinutes(currentStart, serviceDuration);
 		}
-		currentStart = addMinutes(currentStart, serviceDuration);
-	}
-};
+	};
 
 	if (customWorkingHours.length > 0) {
 		for (const customHour of customWorkingHours) {
@@ -376,26 +373,19 @@ if (queryDateInAR < todayInAR) {
 	});
 
 	const availableSlots = timeSlots.filter((slot) => {
-	const slotStart = parse(slot.startTime, "HH:mm", new Date(`${date}T00:00`));
-	const slotEnd = addMinutes(slotStart, serviceDuration);
+		const slotStart = parse(slot.startTime, "HH:mm", new Date(`${date}T00:00`));
+		const slotEnd = addMinutes(slotStart, serviceDuration);
 
-	if (
-		isSameDay(parsedDateInAR, nowInAR) && 
-		isBefore(slotStart, nowInAR)
-	) {
-		return false;
-	}
+		const overlaps = reservedRanges.some(({ resStart, resEnd }) => {
+			return (
+				(slotStart >= resStart && slotStart < resEnd) ||
+				(slotEnd > resStart && slotEnd <= resEnd) ||
+				(slotStart <= resStart && slotEnd >= resEnd)
+			);
+		});
 
-	const overlaps = reservedRanges.some(({ resStart, resEnd }) => {
-		return (
-			(slotStart >= resStart && slotStart < resEnd) ||
-			(slotEnd > resStart && slotEnd <= resEnd) ||
-			(slotStart <= resStart && slotEnd >= resEnd)
-		);
+		return !overlaps;
 	});
-
-	return !overlaps;
-});
 
 	availableSlots.sort((a, b) => {
 		const timeA = new Date(`1970-01-01T${a.startTime}:00Z`);
