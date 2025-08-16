@@ -13,7 +13,7 @@ export const sequelize =
 				dialect: "postgres",
 				protocol: "postgres",
 				dialectModule: pg,
-				logging: console.log,
+				logging: false,
 				dialectOptions: {
 					ssl: {
 						require: true,
@@ -26,7 +26,7 @@ export const sequelize =
 				dialect: "postgres",
 				protocol: "postgres",
 				dialectModule: pg,
-				logging: console.log,
+				logging: false,
 				dialectOptions: {},
 			});
 

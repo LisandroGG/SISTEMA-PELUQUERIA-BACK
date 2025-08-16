@@ -66,19 +66,19 @@ cron.schedule("* * * * *", async () => {
 			});
 
 			console.log(
-				`🔔 Enviado recordatorio a ${res.clientGmail} para ${res.date} ${res.startTime}`,
+				`Enviado recordatorio a ${res.clientGmail} para ${res.date} ${res.startTime}`,
 			);
 		}
 	} catch (error) {
-		console.error("❌ Error en el cron de recordatorios:", error.message);
+		console.error("Error en el cron de recordatorios:", error.message);
 	}
 });
 
 cron.schedule("0 0 1 * *", async () => {
 	try {
 		await deleteFinishedReservations();
-		console.log("✅ Limpieza mensual ejecutada correctamente");
+		console.log("Limpieza mensual ejecutada correctamente");
 	} catch (error) {
-		console.error("❌ Error al ejecutar limpieza mensual:", error.message);
+		console.error("Error al ejecutar limpieza mensual:", error.message);
 	}
 });
