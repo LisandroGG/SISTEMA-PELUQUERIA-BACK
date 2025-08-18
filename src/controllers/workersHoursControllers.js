@@ -18,6 +18,8 @@ import { Reservation } from "../models/reservations.js";
 import { Service } from "../models/services.js";
 import { Worker } from "../models/workers.js";
 import { WorkingHour } from "../models/workingHours.js";
+import { toZonedTime } from "date-fns-tz"
+const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export const createWorkingHour = async (req, res) => {
 	const hours = req.body;
@@ -267,12 +269,18 @@ export const getWorkerAvailableHours = async ({
 	const parsedDate = parseISO(date);
 	const now = new Date();
 
-	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
-		return {
-			source: "past",
-			message: "No se pueden consultar horarios de fechas pasadas",
-			timeSlots: [],
-		};
+	const zonedParsedDate = toZonedTime(parsedDate, ARG_TIMEZONE);
+	const zonedNow = toZonedTime(now, ARG_TIMEZONE);
+
+	console.log("fecha parseada", zonedParsedDate)
+	console.log("hora ahora:", zonedNow)
+
+	if (isBefore(startOfDay(zonedParsedDate), startOfDay(zonedNow))) {
+  		return {
+    		source: "past",
+    		message: "No se pueden consultar horarios de fechas pasadas",
+    		timeSlots: [],
+  		};
 	}
 
 	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
@@ -315,7 +323,7 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	const timeSlots = [];
-	const shouldFilterPastTimes = isToday(parsedDate);
+	const shouldFilterPastTimes = isToday(zonedParsedDate);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
 		let currentStart = new Date(`${date}T${startTimeStr}`);
@@ -324,7 +332,7 @@ export const getWorkerAvailableHours = async ({
 		while (currentStart < endTime) {
 			const slotEndTime = addMinutes(currentStart, serviceDuration);
 			if (slotEndTime <= endTime) {
-				if (!shouldFilterPastTimes || isAfter(currentStart, now)) {
+				if (!shouldFilterPastTimes || isAfter(currentStart, zonedNow)) {
 					timeSlots.push({
 						startTime: format(currentStart, "HH:mm"),
 					});
