@@ -246,7 +246,7 @@ export const getBlockedDays = async (req, res) => {
   console.log(">>> getBlockedDays - zonedToday (ARG):", zonedToday);
 
   const blockedDays = [];
-  const daysToCheck = 65;
+  const daysToCheck = 1;
 
   for (let i = 0; i < daysToCheck; i++) {
     const date = format(addDays(zonedToday, i), "yyyy-MM-dd");
