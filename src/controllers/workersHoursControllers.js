@@ -246,10 +246,10 @@ export const getBlockedDays = async (req, res) => {
   console.log(">>> getBlockedDays - zonedToday (ARG):", zonedToday);
 
   const blockedDays = [];
-  const daysToCheck = 1;
+  const daysToCheck = 65;
 
   for (let i = 0; i < daysToCheck; i++) {
-    const date = format(addDays(zonedToday, i), "yyyy-MM-dd");
+    const date = addDays(zonedToday, i);
     console.log(`--- Chequeando día ${i + 1} / ${daysToCheck}: ${date} ---`);
 
     try {
@@ -262,15 +262,15 @@ export const getBlockedDays = async (req, res) => {
       console.log(`Resultado para ${date}:`, result);
 
       if (result.source === "disabled") {
-        console.log(`>>> Día ${date} bloqueado por estar deshabilitado`);
-        blockedDays.push(date);
-      } else if (result.source === "past") {
-        console.log(`>>> Día ${date} bloqueado por ser pasado`);
-        blockedDays.push(date);
-      } else if (result.timeSlots.length === 0) {
-        console.log(`>>> Día ${date} bloqueado porque no quedan slots disponibles`);
-        blockedDays.push(date);
-      }
+  console.log(`>>> Día ${date} bloqueado por estar deshabilitado`);
+  blockedDays.push(format(date, "yyyy-MM-dd"));
+} else if (result.source === "past") {
+  console.log(`>>> Día ${date} bloqueado por ser pasado`);
+  blockedDays.push(format(date, "yyyy-MM-dd"));
+} else if (result.timeSlots.length === 0) {
+  console.log(`>>> Día ${date} bloqueado porque no quedan slots disponibles`);
+  blockedDays.push(format(date, "yyyy-MM-dd"));
+}
     } catch (err) {
       console.error(`Error en día ${date}:`, err.message);
     }
@@ -285,7 +285,12 @@ export const getWorkerAvailableHours = async ({ workerId, serviceId, date }) => 
   console.log(">>> getWorkerAvailableHours llamado con:", { workerId, serviceId, date });
 
   // Parseo de la fecha recibida
-  const parsedDate = parseISO(date);
+  let parsedDate;
+if (typeof date === "string") {
+  parsedDate = parseISO(date);
+} else {
+  parsedDate = date;
+}
   const now = new Date();
 
   // Convertimos a hora de Argentina
@@ -356,11 +361,12 @@ export const getWorkerAvailableHours = async ({ workerId, serviceId, date }) => 
   const timeSlots = [];
   const shouldFilterPastTimes = isToday(zonedParsedDate);
   console.log("Filtrar horas pasadas hoy (ARG):", shouldFilterPastTimes);
+  const dateStr = format(parsedDate, "yyyy-MM-dd");
 
   const generateSlots = (startTimeStr, endTimeStr) => {
     console.log(`Generando slots desde ${startTimeStr} hasta ${endTimeStr}`);
-    let currentStart = new Date(`${date}T${startTimeStr}`);
-    const endTime = new Date(`${date}T${endTimeStr}`);
+    let currentStart = new Date(`${dateStr}T${startTimeStr}`);
+    const endTime = new Date(`${dateStr}T${endTimeStr}`);
 
     while (currentStart < endTime) {
       const slotEndTime = addMinutes(currentStart, serviceDuration);
@@ -407,14 +413,14 @@ export const getWorkerAvailableHours = async ({ workerId, serviceId, date }) => 
   console.log("Reservas existentes:", existingReservations.length);
 
   const reservedRanges = existingReservations.map((res) => {
-    const resStart = parse(res.startTime, "HH:mm:ss", new Date(`${date}T00:00`));
-    const resEnd = parse(res.endTime, "HH:mm:ss", new Date(`${date}T00:00`));
+    const resStart = parse(res.startTime, "HH:mm:ss", new Date(`${dateStr}T00:00`));
+    const resEnd = parse(res.endTime, "HH:mm:ss", new Date(`${dateStr}T00:00`));
     console.log(`Reserva bloquea de ${format(resStart, "HH:mm")} a ${format(resEnd, "HH:mm")}`);
     return { resStart, resEnd };
   });
 
   const availableSlots = timeSlots.filter((slot) => {
-    const slotStart = parse(slot.startTime, "HH:mm", new Date(`${date}T00:00`));
+    const slotStart = parse(slot.startTime, "HH:mm", new Date(`${dateStr}T00:00`));
     const slotEnd = addMinutes(slotStart, serviceDuration);
 
     const overlaps = reservedRanges.some(({ resStart, resEnd }) => {
