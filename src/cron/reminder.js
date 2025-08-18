@@ -19,8 +19,6 @@ const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
 cron.schedule("* * * * *", async () => {
 	try {
 		const now = toZonedTime(new Date(), ARG_TIMEZONE);
-		const argentinaTimeFormatted = format(now, "yyyy-MM-dd HH:mm:ss", { locale: es });
-		console.log("Hora de Argentina:", argentinaTimeFormatted);
 		const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
 		const reservations = await Reservation.findAll({
