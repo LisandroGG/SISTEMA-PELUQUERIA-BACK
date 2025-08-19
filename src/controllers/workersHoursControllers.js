@@ -350,30 +350,35 @@ export const getWorkerAvailableHours = async ({
 	console.log("Filtrar horas pasadas hoy?:", shouldFilterPastTimes);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-		let currentStart = new Date(`${date}T${startTimeStr}-03:00`);
-        const endTime = new Date(`${date}T${endTimeStr}-03:00`);
-		console.log(`Generando slots desde ${format(currentStart, "HH:mm")} hasta ${format(endTime, "HH:mm")}`);
+  let [hour, min] = startTimeStr.split(":").map(Number);
+  const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
-		while (currentStart < endTime) {
-			const slotEndTime = addMinutes(currentStart, serviceDuration);
-			console.log(`Intentando slot: ${format(currentStart, "HH:mm")} - ${format(slotEndTime, "HH:mm")}`);
+  console.log(`Generando slots desde ${startTimeStr} hasta ${endTimeStr}`);
 
-			if (slotEndTime <= endTime) {
-				if (!shouldFilterPastTimes || isAfter(currentStart, now)) {
-					timeSlots.push({
-						startTime: format(currentStart, "HH:mm"),
-					});
-					console.log("Slot agregado:", format(currentStart, "HH:mm"));
-				} else{
-					console.log("Slot filtrado por hora pasada:", format(currentStart, "HH:mm"), "Ahora:", format(now, "HH:mm"));
-				}
-			}else {
-				console.log("Slot descartado, termina después del fin del rango:", format(slotEndTime, "HH:mm"));
-			}
-			currentStart = addMinutes(currentStart, serviceDuration);
-		}
-		console.log("Slots generados hasta ahora:", timeSlots.map(s => s.startTime));
-	};
+  while (hour < endHour || (hour === endHour && min < endMin)) {
+    // Crear la fecha en hora Argentina
+    const slotDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, min);
+    const slotEndDate = addMinutes(slotDate, serviceDuration);
+    const slotStr = format(slotDate, "HH:mm");
+    console.log(`Intentando slot: ${slotStr} - ${format(slotEndDate, "HH:mm")}`);
+
+    if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
+      timeSlots.push({ startTime: slotStr });
+      console.log("Slot agregado:", slotStr);
+    } else {
+      console.log("Slot filtrado por hora pasada:", slotStr, "Ahora:", format(now, "HH:mm"));
+    }
+
+    // Sumar duración
+    min += serviceDuration;
+    while (min >= 60) {
+      min -= 60;
+      hour += 1;
+    }
+  }
+
+  console.log("Slots generados hasta ahora:", timeSlots.map(s => s.startTime));
+};
 
 	if (customWorkingHours.length > 0) {
 		for (const customHour of customWorkingHours) {
