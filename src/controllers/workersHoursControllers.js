@@ -243,7 +243,6 @@ export const getBlockedDays = async (req, res) => {
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
-		console.log(`Chequeando día ${i + 1}:`, date);
 
 		try {
 			const result = await getWorkerAvailableHours({
@@ -252,19 +251,14 @@ export const getBlockedDays = async (req, res) => {
 				date,
 			});
 
-			console.log("Resultado getWorkerAvailableHours:", result);
-
 			if (result.source === "disabled" || result.timeSlots.length === 0) {
 				console.log("Día bloqueado:", date);
 				blockedDays.push(date);
-			} else {
-				console.log("Día disponible:", date, "Slots:", result.timeSlots);
 			}
 		} catch (err) {
 			console.error(`Error en día ${date}:`, err.message);
 		}
 	}
-	console.log("blockedDays finales:", blockedDays);
 	return res.status(200).json({ blockedDays });
 };
 
@@ -288,13 +282,10 @@ export const getWorkerAvailableHours = async ({
 	}
 
 	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
-	console.log("Día de la semana:", dayOfWeek);
 
 	const service = await Service.findByPk(serviceId, {
 		include: [{ model: Worker, as: "Workers" }],
 	});
-
-	console.log("Servicio encontrado:", service ? service.name : "NO");
 
 	if (!service) {
 		return {
@@ -308,8 +299,6 @@ export const getWorkerAvailableHours = async ({
 		(worker) => worker.id === Number.parseInt(workerId),
 	);
 
-	console.log("Trabajador asignado al servicio:", workerIsAssigned);
-
 	if (!workerIsAssigned) {
 		return {
 			source: "not_assigned",
@@ -319,13 +308,10 @@ export const getWorkerAvailableHours = async ({
 	}
 
 	const serviceDuration = service.duration;
-	console.log("Duración del servicio:", serviceDuration);
 
 	const disabled = await DisableDay.findOne({
 		where: { workerId, day: date },
 	});
-
-	console.log("Día deshabilitado en DisableDay:", !!disabled);
 
 	if (disabled) {
 		return {

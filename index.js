@@ -21,11 +21,17 @@ const allowedOrigins = API_STATUS === "production" ? [DEPLOY] : [LOCALHOST];
 app.use(
 	cors({
 		origin: (origin, callback) => {
-			if (!origin) return callback(null, true);
+			console.log(">>> Petición recibida desde origin:", origin);
+			if (!origin) {
+				console.log(">>> No se recibió origin (probablemente Postman). Permitido.");
+				return callback(null, true);
+			}
 
 			if (allowedOrigins.includes(origin)) {
+				console.log(">>> Origen permitido:", origin);
 				callback(null, true);
 			} else {
+				console.error("Origen bloqueado por CORS:", origin);
 				callback(new Error(`CORS policy: Origen no permitido - ${origin}`));
 			}
 		},
