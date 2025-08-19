@@ -99,7 +99,7 @@ export const loginUser = async (req, res) => {
 		};
 
 		const access_token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-			expiresIn: "30s",
+			expiresIn: "2h",
 		});
 		const refresh_token = jwt.sign(
 			payload,
@@ -111,7 +111,7 @@ export const loginUser = async (req, res) => {
 			httpOnly: true,
 			sameSite: isProduction ? "none" : "lax",
 			secure: isProduction,
-			maxAge: 30 * 1000,
+			maxAge: 2 * 60 * 60 * 1000,
 		});
 
 		res.cookie("refreshToken", refresh_token, {
@@ -161,7 +161,7 @@ export const refreshAccessToken = async (req, res) => {
 			},
 			process.env.JWT_SECRET_KEY,
 			{
-				expiresIn: "30s",
+				expiresIn: "2h",
 			},
 		);
 
@@ -169,7 +169,7 @@ export const refreshAccessToken = async (req, res) => {
 			httpOnly: true,
 			sameSite: isProduction ? "none" : "lax",
 			secure: isProduction,
-			maxAge: 30 * 1000,
+			maxAge: 2 * 60 * 60 * 1000,
 		});
 
 		return res.status(200).json({ token: newAccessToken });
