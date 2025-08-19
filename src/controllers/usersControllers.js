@@ -99,7 +99,7 @@ export const loginUser = async (req, res) => {
 		};
 
 		const access_token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-			expiresIn: "2h",
+			expiresIn: "1m",
 		});
 		const refresh_token = jwt.sign(
 			payload,
@@ -111,12 +111,13 @@ export const loginUser = async (req, res) => {
 			httpOnly: true,
 			sameSite: isProduction ? "none" : "lax",
 			secure: isProduction,
-			maxAge: 2 * 60 * 60 * 1000,
+			maxAge: 1 * 60 * 1000,
 		});
 
 		res.cookie("refreshToken", refresh_token, {
 			httpOnly: true,
-			sameSite: "Lax",
+			sameSite: isProduction ? "none" : "lax",
+			secure: isProduction,
 			maxAge: 30 * 24 * 60 * 60 * 1000,
 		});
 
@@ -160,7 +161,7 @@ export const refreshAccessToken = async (req, res) => {
 			},
 			process.env.JWT_SECRET_KEY,
 			{
-				expiresIn: "2h",
+				expiresIn: "1m",
 			},
 		);
 
@@ -168,7 +169,7 @@ export const refreshAccessToken = async (req, res) => {
 			httpOnly: true,
 			sameSite: isProduction ? "none" : "lax",
 			secure: isProduction,
-			maxAge: 2 * 60 * 60 * 1000,
+			maxAge: 1 * 60 * 1000,
 		});
 
 		return res.status(200).json({ token: newAccessToken });
@@ -181,8 +182,8 @@ export const refreshAccessToken = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
 	try {
-		res.clearCookie("token");
-		res.clearCookie("refreshToken");
+		res.clearCookie("token", { httpOnly: true, sameSite: isProduction ? "none" : "lax", secure: isProduction });
+		res.clearCookie("refreshToken", { httpOnly: true, sameSite: isProduction ? "none" : "lax", secure: isProduction });
 		res.status(200).json({ message: "Sesion cerrada exitosamente" });
 	} catch (error) {
 		console.error("Error en logout:", error);
