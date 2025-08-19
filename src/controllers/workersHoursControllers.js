@@ -239,7 +239,7 @@ export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 	const today = toZonedTime(new Date(), ARG_TIMEZONE);
 	const blockedDays = [];
-	const daysToCheck = 2;
+	const daysToCheck = 65;
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
