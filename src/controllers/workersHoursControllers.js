@@ -237,9 +237,7 @@ export const getHoursByDate = async (req, res) => {
 
 export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
-	console.log("--- getBlockedDays ---");
 	const today = toZonedTime(new Date(), ARG_TIMEZONE);
-	console.log("🚀 Hoy (Argentina):", format(today, "yyyy-MM-dd HH:mm"));
 	const blockedDays = [];
 	const daysToCheck = 2;
 
@@ -259,8 +257,8 @@ export const getBlockedDays = async (req, res) => {
 			if (result.source === "disabled" || result.timeSlots.length === 0) {
 				console.log("Día bloqueado:", date);
 				blockedDays.push(date);
-			}else{
-				console.log("Día disponible:", date, "Slots:", result.timeSlots)
+			} else {
+				console.log("Día disponible:", date, "Slots:", result.timeSlots);
 			}
 		} catch (err) {
 			console.error(`Error en día ${date}:`, err.message);
@@ -275,14 +273,13 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
-	const parsedDate = toZonedTime(parseISO(`${date}T00:00:00-03:00`), ARG_TIMEZONE);
-    const now = toZonedTime(new Date(), ARG_TIMEZONE);
-	console.log("--- getWorkerAvailableHours ---");
-	console.log("Fecha consultada (Argentina):", format(parsedDate, "yyyy-MM-dd HH:mm"));
-	console.log("Ahora (Argentina):", format(now, "yyyy-MM-dd HH:mm"));
+	const parsedDate = toZonedTime(
+		parseISO(`${date}T00:00:00-03:00`),
+		ARG_TIMEZONE,
+	);
+	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
-		console.log("Fecha pasada, no se pueden consultar horarios");
 		return {
 			source: "past",
 			message: "No se pueden consultar horarios de fechas pasadas",
@@ -304,7 +301,7 @@ export const getWorkerAvailableHours = async ({
 			source: "no_find_service",
 			message: "Servicio no encontrado",
 			timeSlots: [],
-		}
+		};
 	}
 
 	const workerIsAssigned = service.Workers.some(
@@ -343,42 +340,35 @@ export const getWorkerAvailableHours = async ({
 		include: [{ model: Worker, as: "worker" }],
 	});
 
-	console.log("Horarios personalizados encontrados:", customWorkingHours.length);
-
 	const timeSlots = [];
 	const shouldFilterPastTimes = isToday(parsedDate);
-	console.log("Filtrar horas pasadas hoy?:", shouldFilterPastTimes);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-  let [hour, min] = startTimeStr.split(":").map(Number);
-  const [endHour, endMin] = endTimeStr.split(":").map(Number);
+		let [hour, min] = startTimeStr.split(":").map(Number);
+		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
-  console.log(`Generando slots desde ${startTimeStr} hasta ${endTimeStr}`);
+		while (hour < endHour || (hour === endHour && min < endMin)) {
+			const slotDate = new Date(
+				parsedDate.getFullYear(),
+				parsedDate.getMonth(),
+				parsedDate.getDate(),
+				hour,
+				min,
+			);
+			const slotEndDate = addMinutes(slotDate, serviceDuration);
+			const slotStr = format(slotDate, "HH:mm");
 
-  while (hour < endHour || (hour === endHour && min < endMin)) {
-    // Crear la fecha en hora Argentina
-    const slotDate = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, min);
-    const slotEndDate = addMinutes(slotDate, serviceDuration);
-    const slotStr = format(slotDate, "HH:mm");
-    console.log(`Intentando slot: ${slotStr} - ${format(slotEndDate, "HH:mm")}`);
+			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
+				timeSlots.push({ startTime: slotStr });
+			}
 
-    if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
-      timeSlots.push({ startTime: slotStr });
-      console.log("Slot agregado:", slotStr);
-    } else {
-      console.log("Slot filtrado por hora pasada:", slotStr, "Ahora:", format(now, "HH:mm"));
-    }
-
-    // Sumar duración
-    min += serviceDuration;
-    while (min >= 60) {
-      min -= 60;
-      hour += 1;
-    }
-  }
-
-  console.log("Slots generados hasta ahora:", timeSlots.map(s => s.startTime));
-};
+			min += serviceDuration;
+			while (min >= 60) {
+				min -= 60;
+				hour += 1;
+			}
+		}
+	};
 
 	if (customWorkingHours.length > 0) {
 		for (const customHour of customWorkingHours) {
@@ -389,7 +379,6 @@ export const getWorkerAvailableHours = async ({
 			where: { workerId, dayOfWeek },
 			include: [{ model: Worker, as: "worker" }],
 		});
-		console.log("Horarios semanales encontrados:", workingHours.length);
 		for (const work of workingHours) {
 			generateSlots(work.startTime, work.endTime);
 		}
@@ -406,8 +395,6 @@ export const getWorkerAvailableHours = async ({
 		attributes: ["startTime", "endTime"],
 	});
 
-	console.log("Reservas existentes:", existingReservations.length);
-
 	const reservedRanges = existingReservations.map((res) => {
 		const resStart = parse(
 			res.startTime,
@@ -417,8 +404,6 @@ export const getWorkerAvailableHours = async ({
 		const resEnd = parse(res.endTime, "HH:mm:ss", new Date(`${date}T00:00`));
 		return { resStart, resEnd };
 	});
-
-	console.log("Rangos de reservas:", reservedRanges);
 
 	const availableSlots = timeSlots.filter((slot) => {
 		const slotStart = parse(slot.startTime, "HH:mm", new Date(`${date}T00:00`));
@@ -435,8 +420,6 @@ export const getWorkerAvailableHours = async ({
 		return !overlaps;
 	});
 
-	console.log("Slots finales disponibles:", availableSlots.map(s => s.startTime));
-
 	availableSlots.sort((a, b) => {
 		const timeA = new Date(`1970-01-01T${a.startTime}:00Z`);
 		const timeB = new Date(`1970-01-01T${b.startTime}:00Z`);
@@ -444,7 +427,7 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	return {
-		source: customWorkingHours > 0  ? "custom" : "weekly",
+		source: customWorkingHours > 0 ? "custom" : "weekly",
 		timeSlots: availableSlots,
 	};
 };

@@ -1,8 +1,8 @@
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { es } from "date-fns/locale";
 import cron from "node-cron";
 import { Op } from "sequelize";
-import { toZonedTime } from "date-fns-tz";
 import { sendGmailReminder } from "../config/mailer.js";
 import { deleteFinishedReservations } from "../controllers/reservationsControllers.js";
 import {
@@ -41,7 +41,7 @@ cron.schedule("* * * * *", async () => {
 
 		for (const res of reservations) {
 			await res.update({ reminderSent: true });
-			
+
 			const formattedDate = formatDateToLongSpanish(res.date);
 			const formattedTime = formatTimeToHHMM(res.startTime);
 

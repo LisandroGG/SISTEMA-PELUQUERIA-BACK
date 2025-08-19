@@ -17,8 +17,8 @@ import {
 	reservationCancel,
 	reservationConfirm,
 } from "../whatsapp/messageTemplates.js";
-import { toZonedTime } from "date-fns-tz";
 
+import { toZonedTime } from "date-fns-tz";
 const ARG_TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export const createReservation = async (req, res) => {
@@ -119,16 +119,35 @@ export const createReservation = async (req, res) => {
 			clientPhoneNumber,
 		});
 
-		const cancelStartDateTime = new Date(
-			`${reservation.date}T${reservation.startTime}`,)
-		const expirationTime = new Date(
+		const cancelStartDateTime = toZonedTime(
+			new Date(`${reservation.date}T${reservation.startTime}`),
+			ARG_TIMEZONE,
+		);
+
+		console.log(
+			"Turno (hora Argentina):",
+			format(cancelStartDateTime, "yyyy-MM-dd HH:mm"),
+		);
+		let expirationTime = new Date(
 			cancelStartDateTime.getTime() - 60 * 60 * 1000,
 		);
+		console.log(
+			"Expiración del token (1h antes):",
+			format(expirationTime, "yyyy-MM-dd HH:mm"),
+		);
+
+		if (expirationTime <= new Date()) {
+			expirationTime = new Date(Date.now() + 10 * 60 * 1000);
+		}
+		const expiresInSeconds = Math.floor(
+			(expirationTime.getTime() - Date.now()) / 1000,
+		);
+		console.log("Segundos hasta expiración del token:", expiresInSeconds);
 
 		const token = jwt.sign(
 			{ reservationId: reservation.id },
 			process.env.JWT_SECRET_KEY,
-			{ expiresIn: Math.floor((expirationTime.getTime() - Date.now()) / 1000) },
+			{ expiresIn: expiresInSeconds },
 		);
 
 		const fullReservation = await Reservation.findByPk(reservation.id, {
@@ -140,7 +159,7 @@ export const createReservation = async (req, res) => {
 
 		const formattedDate = formatDateToLongSpanish(fullReservation.date);
 		const formattedTime = formatTimeToHHMM(fullReservation.startTime);
-		
+
 		try {
 			await sendNewReservation({
 				to: fullReservation.clientGmail,
@@ -152,7 +171,7 @@ export const createReservation = async (req, res) => {
 				token: token,
 			});
 		} catch (error) {
-			console.log("Error al enviar mensaje de reserva al gmail")
+			console.log("Error al enviar mensaje de reserva al gmail");
 		}
 
 		try {
@@ -166,7 +185,7 @@ export const createReservation = async (req, res) => {
 				token: token,
 			});
 		} catch (error) {
-			console.log("Error al enviar mensaje de reserva al whatsapp")
+			console.log("Error al enviar mensaje de reserva al whatsapp");
 		}
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
 	} catch (error) {
@@ -326,7 +345,7 @@ export const cancelReservation = async (req, res) => {
 				worker: reservation.worker.name,
 			});
 		} catch (error) {
-			console.log("Error al enviar mensaje de cancelacion al gmail")
+			console.log("Error al enviar mensaje de cancelacion al gmail");
 		}
 		try {
 			await reservationCancel({
@@ -338,7 +357,7 @@ export const cancelReservation = async (req, res) => {
 				worker: reservation.worker.name,
 			});
 		} catch (error) {
-			console.log("Error al enviar mensaje de cancelacion al whatsapp")
+			console.log("Error al enviar mensaje de cancelacion al whatsapp");
 		}
 
 		await reservation.save();

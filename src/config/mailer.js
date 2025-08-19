@@ -9,11 +9,11 @@ const {
 	MAILER_PASSWORD,
 	MAILER_BARBER_NAME,
 	LOCALHOST,
-  DEPLOY,
-  API_STATUS,
+	DEPLOY,
+	API_STATUS,
 } = process.env;
 
-const BASE_URL = API_STATUS === "production" ? DEPLOY : LOCALHOST
+const BASE_URL = API_STATUS === "production" ? DEPLOY : LOCALHOST;
 
 export const transporter = nodemailer.createTransport({
 	host: MAILER_HOST,
