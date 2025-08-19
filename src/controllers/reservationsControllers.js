@@ -124,16 +124,8 @@ export const createReservation = async (req, res) => {
 			ARG_TIMEZONE,
 		);
 
-		console.log(
-			"Turno (hora Argentina):",
-			format(cancelStartDateTime, "yyyy-MM-dd HH:mm"),
-		);
 		let expirationTime = new Date(
 			cancelStartDateTime.getTime() - 60 * 60 * 1000,
-		);
-		console.log(
-			"Expiración del token (1h antes):",
-			format(expirationTime, "yyyy-MM-dd HH:mm"),
 		);
 
 		if (expirationTime <= new Date()) {
@@ -142,7 +134,6 @@ export const createReservation = async (req, res) => {
 		const expiresInSeconds = Math.floor(
 			(expirationTime.getTime() - Date.now()) / 1000,
 		);
-		console.log("Segundos hasta expiración del token:", expiresInSeconds);
 
 		const token = jwt.sign(
 			{ reservationId: reservation.id },
