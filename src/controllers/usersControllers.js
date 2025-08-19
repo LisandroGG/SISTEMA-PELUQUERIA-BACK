@@ -99,7 +99,7 @@ export const loginUser = async (req, res) => {
 		};
 
 		const access_token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-			expiresIn: "1m",
+			expiresIn: "2h",
 		});
 		const refresh_token = jwt.sign(
 			payload,
@@ -107,13 +107,11 @@ export const loginUser = async (req, res) => {
 			{ expiresIn: "30d" },
 		);
 
-		console.log("[LOGIN] Tokens generados:", { access_token, refresh_token });
-
 		res.cookie("token", access_token, {
 			httpOnly: true,
 			sameSite: isProduction ? "none" : "lax",
 			secure: isProduction,
-			maxAge: 1 * 60 * 1000,
+			maxAge: 2 * 60 * 60 * 1000,
 		});
 
 		res.cookie("refreshToken", refresh_token, {
@@ -123,7 +121,6 @@ export const loginUser = async (req, res) => {
 			maxAge: 30 * 24 * 60 * 60 * 1000,
 		});
 
-		console.log("[LOGIN] Cookies enviadas");
 
 		return res.status(200).json({
 			message: "Inicio de sesion exitoso!",
@@ -146,10 +143,8 @@ export const loginUser = async (req, res) => {
 
 export const refreshAccessToken = async (req, res) => {
 	const refreshToken = req.cookies.refreshToken;
-	console.log("[REFRESH] Cookie recibida:", refreshToken);
 
 	if (!refreshToken) {
-		console.log("[REFRESH] No hay refresh token");
 		return res.status(401).json({ message: "Refresh token no encontrado" });
 	}
 
@@ -158,7 +153,6 @@ export const refreshAccessToken = async (req, res) => {
 			refreshToken,
 			process.env.JWT_REFRESH_SECRET_KEY,
 		);
-		console.log("[REFRESH] Token decodificado:", decoded);
 
 		const newAccessToken = jwt.sign(
 			{
@@ -168,16 +162,15 @@ export const refreshAccessToken = async (req, res) => {
 			},
 			process.env.JWT_SECRET_KEY,
 			{
-				expiresIn: "1m",
+				expiresIn: "2h",
 			},
 		);
-		console.log("[REFRESH] Nuevo access token generado y cookie enviada");
 
 		res.cookie("token", newAccessToken, {
 			httpOnly: true,
 			sameSite: isProduction ? "none" : "lax",
 			secure: isProduction,
-			maxAge: 1 * 60 * 1000,
+			maxAge: 2 * 60 * 60 * 1000,
 		});
 
 		return res.status(200).json({ token: newAccessToken });
@@ -190,12 +183,10 @@ export const refreshAccessToken = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
 	try {
-		console.log("[LOGOUT] Limpiando cookies");
 		res.clearCookie("token", { httpOnly: true, sameSite: isProduction ? "none" : "lax", secure: isProduction });
 		res.clearCookie("refreshToken", { httpOnly: true, sameSite: isProduction ? "none" : "lax", secure: isProduction });
 		res.status(200).json({ message: "Sesion cerrada exitosamente" });
 	} catch (error) {
-		console.error("[LOGOUT] Error:", error);
 		console.error("Error en logout:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
