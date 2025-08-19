@@ -238,10 +238,10 @@ export const getHoursByDate = async (req, res) => {
 export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 	console.log("--- getBlockedDays ---");
-	const today = new Date();
-	console.log("🚀 Hoy (UTC del servidor):", today);
+	const today = toZonedTime(new Date(), ARG_TIMEZONE);
+	console.log("🚀 Hoy (Argentina):", format(today, "yyyy-MM-dd HH:mm"));
 	const blockedDays = [];
-	const daysToCheck = 4;
+	const daysToCheck = 2;
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
@@ -275,8 +275,8 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
-	const parsedDate = toZonedTime(parseISO(date), ARG_TIMEZONE);
-	const now = toZonedTime(new Date(), ARG_TIMEZONE);
+	const parsedDate = toZonedTime(parseISO(`${date}T00:00:00-03:00`), ARG_TIMEZONE);
+    const now = toZonedTime(new Date(), ARG_TIMEZONE);
 	console.log("--- getWorkerAvailableHours ---");
 	console.log("Fecha consultada (Argentina):", format(parsedDate, "yyyy-MM-dd HH:mm"));
 	console.log("Ahora (Argentina):", format(now, "yyyy-MM-dd HH:mm"));
@@ -350,18 +350,25 @@ export const getWorkerAvailableHours = async ({
 	console.log("Filtrar horas pasadas hoy?:", shouldFilterPastTimes);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-		let currentStart = new Date(`${date}T${startTimeStr}`);
-		const endTime = new Date(`${date}T${endTimeStr}`);
+		let currentStart = new Date(`${date}T${startTimeStr}-03:00`);
+        const endTime = new Date(`${date}T${endTimeStr}-03:00`);
 		console.log(`Generando slots desde ${format(currentStart, "HH:mm")} hasta ${format(endTime, "HH:mm")}`);
 
 		while (currentStart < endTime) {
 			const slotEndTime = addMinutes(currentStart, serviceDuration);
+			console.log(`Intentando slot: ${format(currentStart, "HH:mm")} - ${format(slotEndTime, "HH:mm")}`);
+
 			if (slotEndTime <= endTime) {
 				if (!shouldFilterPastTimes || isAfter(currentStart, now)) {
 					timeSlots.push({
 						startTime: format(currentStart, "HH:mm"),
 					});
+					console.log("Slot agregado:", format(currentStart, "HH:mm"));
+				} else{
+					console.log("Slot filtrado por hora pasada:", format(currentStart, "HH:mm"), "Ahora:", format(now, "HH:mm"));
 				}
+			}else {
+				console.log("Slot descartado, termina después del fin del rango:", format(slotEndTime, "HH:mm"));
 			}
 			currentStart = addMinutes(currentStart, serviceDuration);
 		}
