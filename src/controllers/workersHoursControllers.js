@@ -252,7 +252,6 @@ export const getBlockedDays = async (req, res) => {
 			});
 
 			if (result.source === "disabled" || result.timeSlots.length === 0) {
-				console.log("Día bloqueado:", date);
 				blockedDays.push(date);
 			}
 		} catch (err) {
@@ -328,6 +327,7 @@ export const getWorkerAvailableHours = async ({
 
 	const timeSlots = [];
 	const shouldFilterPastTimes = isToday(parsedDate);
+	console.log("Filtrar horas pasadas hoy?:", shouldFilterPastTimes);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
 		let [hour, min] = startTimeStr.split(":").map(Number);
@@ -344,8 +344,13 @@ export const getWorkerAvailableHours = async ({
 			const slotEndDate = addMinutes(slotDate, serviceDuration);
 			const slotStr = format(slotDate, "HH:mm");
 
+			console.log(`Intentando slot: ${slotStr} - ${format(slotEndDate, "HH:mm")}`);
+
 			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
+				console.log("Slot agregado:", slotStr);
 				timeSlots.push({ startTime: slotStr });
+			}else {
+				console.log("Slot filtrado por hora pasada:", slotStr, "Ahora:", format(now, "HH:mm"));
 			}
 
 			min += serviceDuration;
