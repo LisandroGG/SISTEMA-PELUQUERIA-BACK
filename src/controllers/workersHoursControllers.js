@@ -327,30 +327,27 @@ export const getWorkerAvailableHours = async ({
 
 	const timeSlots = [];
 	const shouldFilterPastTimes = isToday(parsedDate);
-	console.log("Filtrar horas pasadas hoy?:", shouldFilterPastTimes);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
 		let [hour, min] = startTimeStr.split(":").map(Number);
 		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
 		while (hour < endHour || (hour === endHour && min < endMin)) {
-			const slotDate = new Date(
-				parsedDate.getFullYear(),
-				parsedDate.getMonth(),
-				parsedDate.getDate(),
-				hour,
-				min,
-			);
+			const slotDate = toZonedTime(
+	new Date(
+		parsedDate.getFullYear(),
+		parsedDate.getMonth(),
+		parsedDate.getDate(),
+		hour,
+		min,
+	),
+	ARG_TIMEZONE
+);
 			const slotEndDate = addMinutes(slotDate, serviceDuration);
 			const slotStr = format(slotDate, "HH:mm");
 
-			console.log(`Intentando slot: ${slotStr} - ${format(slotEndDate, "HH:mm")}`);
-
 			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
-				console.log("Slot agregado:", slotStr);
 				timeSlots.push({ startTime: slotStr });
-			}else {
-				console.log("Slot filtrado por hora pasada:", slotStr, "Ahora:", format(now, "HH:mm"));
 			}
 
 			min += serviceDuration;
@@ -418,7 +415,7 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	return {
-		source: customWorkingHours > 0 ? "custom" : "weekly",
+		source: customWorkingHours.length > 0 ? "custom" : "weekly",
 		timeSlots: availableSlots,
 	};
 };
