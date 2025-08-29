@@ -239,7 +239,7 @@ export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 	const today = toZonedTime(new Date(), ARG_TIMEZONE);
 	const blockedDays = [];
-	const daysToCheck = 1;
+	const daysToCheck = 5;
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
@@ -444,14 +444,10 @@ export const getWorkerAvailableHours = async ({
 		return timeA - timeB;
 	});
 
-		const result = {
-		source: customWorkingHours.length > 0 ? "custom" : "weekly",
+	return {
+		source: customWorkingHours > 0 ? "custom" : "weekly",
 		timeSlots: availableSlots,
 	};
-
-	console.log("📤 Final result:", result);
-
-	return result;
 };
 
 export const editWorkingHour = async (req, res) => {
