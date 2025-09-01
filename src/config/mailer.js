@@ -17,8 +17,8 @@ const BASE_URL = API_STATUS === "production" ? DEPLOY : LOCALHOST;
 
 export const transporter = nodemailer.createTransport({
 	host: MAILER_HOST,
-	port: Number(MAILER_PORT),
-	secure: Number(MAILER_PORT) === 465,
+	port: MAILER_PORT,
+	secure: true,
 	auth: {
 		user: MAILER_USER,
 		pass: MAILER_PASSWORD,
