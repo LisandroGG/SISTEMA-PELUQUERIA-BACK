@@ -424,8 +424,16 @@ export const getWorkerAvailableHours = async ({
 		return timeA - timeB;
 	});
 
+	if (availableSlots.length === 0) {
 	return {
-		source: customWorkingHours > 0 ? "custom" : "weekly",
+		source: customWorkingHours.length > 0 ? "custom" : "weekly",
+		message: "Ya no hay turnos disponibles para este día",
+		timeSlots: [],
+	};
+}
+
+	return {
+		source: customWorkingHours.length > 0 ? "custom" : "weekly",
 		timeSlots: availableSlots,
 	};
 };
