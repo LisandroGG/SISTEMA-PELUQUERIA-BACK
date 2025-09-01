@@ -1,4 +1,4 @@
-import { whatsapp } from "../whatsapp/index.js";
+import whatsapp from "../whatsapp/index.js";
 
 const { LOCALHOST, MAILER_BARBER_NAME } = process.env;
 
