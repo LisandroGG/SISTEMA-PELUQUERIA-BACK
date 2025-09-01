@@ -17,14 +17,22 @@ const BASE_URL = API_STATUS === "production" ? DEPLOY : LOCALHOST;
 
 export const transporter = nodemailer.createTransport({
 	host: MAILER_HOST,
-	port: MAILER_PORT,
-	secure: "true",
+	port: Number(MAILER_PORT),
+	secure: Number(MAILER_PORT) === 465,
 	auth: {
 		user: MAILER_USER,
 		pass: MAILER_PASSWORD,
 	},
   logger: true,
   debug: true,
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Error conectando al SMTP:", error);
+  } else {
+    console.log("✅ Nodemailer conectado correctamente!");
+  }
 });
 
 // --- PLANTILLAS MJML ---
