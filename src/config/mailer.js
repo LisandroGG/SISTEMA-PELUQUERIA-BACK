@@ -28,10 +28,11 @@ export const transporter = nodemailer.createTransport({
 });
 
 transporter.verify((error, success) => {
+  console.log("Iniciando verificacion del nodemailer")
   if (error) {
     console.error("Error conectando al SMTP:", error);
   } else {
-    console.log("✅ Nodemailer conectado correctamente!");
+    console.log("Nodemailer conectado correctamente!");
   }
 });
 
