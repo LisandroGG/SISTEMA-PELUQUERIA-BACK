@@ -19,4 +19,3 @@ mainRouter.use("/services", servicesRouter);
 mainRouter.use("/hours", workersHoursRouter);
 mainRouter.use("/disableDay", disableDayRouter);
 mainRouter.use("/reservations", reservationsRouter);
-mainRouter.use("/whatsapp", whatsappRouter);
