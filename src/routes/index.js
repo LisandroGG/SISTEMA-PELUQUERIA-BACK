@@ -5,7 +5,6 @@ import { servicesRouter } from "./services.js";
 import { usersRouter } from "./users.js";
 import { workersRouter } from "./workers.js";
 import { workersHoursRouter } from "./workersHours.js";
-import { whatsappRouter } from "./whatsapp.js";
 
 export const mainRouter = Router();
 
