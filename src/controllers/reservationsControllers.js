@@ -151,33 +151,35 @@ export const createReservation = async (req, res) => {
 		const formattedDate = formatDateToLongSpanish(fullReservation.date);
 		const formattedTime = formatTimeToHHMM(fullReservation.startTime);
 
-		try {
-			await sendNewReservation({
-				to: fullReservation.clientGmail,
-				name: fullReservation.clientName,
-				service: fullReservation.service.name,
-				time: formattedTime,
-				date: formattedDate,
-				worker: fullReservation.worker.name,
-				token: token,
-			});
-		} catch (error) {
-			console.log("Error al enviar mensaje de reserva al gmail");
-		}
+		(async () => {
+			try {
+				await sendNewReservation({
+					to: fullReservation.clientGmail,
+					name: fullReservation.clientName,
+					service: fullReservation.service.name,
+					time: formattedTime,
+					date: formattedDate,
+					worker: fullReservation.worker.name,
+					token: token,
+				});
+			} catch (error) {
+				console.log("Error al enviar mensaje de Gmail:", error.message);
+			}
 
-		try {
-			await reservationConfirm({
-				name: fullReservation.clientName,
-				phoneNumber: fullReservation.clientPhoneNumber,
-				service: fullReservation.service.name,
-				date: formattedDate,
-				time: formattedTime,
-				worker: fullReservation.worker.name,
-				token: token,
-			});
-		} catch (error) {
-			console.log("Error al enviar mensaje de reserva al whatsapp");
-		}
+			try {
+				await reservationConfirm({
+					name: fullReservation.clientName,
+					phoneNumber: fullReservation.clientPhoneNumber,
+					service: fullReservation.service.name,
+					date: formattedDate,
+					time: formattedTime,
+					worker: fullReservation.worker.name,
+					token: token,
+				});
+			} catch (error) {
+				console.log("Error al enviar mensaje de WhatsApp:", error.message);
+			}
+		})();
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
 	} catch (error) {
 		console.error("Error al crear la reserva:", error);
@@ -323,35 +325,44 @@ export const cancelReservation = async (req, res) => {
 
 		reservation.status = "cancel";
 
+		await reservation.save();
+
 		const formattedDate = formatDateToLongSpanish(reservation.date);
 		const formattedTime = formatTimeToHHMM(reservation.startTime);
 
-		try {
-			await sendCancelReservation({
-				to: reservation.clientGmail,
-				name: reservation.clientName,
-				service: reservation.service.name,
-				time: formattedTime,
-				date: formattedDate,
-				worker: reservation.worker.name,
-			});
-		} catch (error) {
-			console.log("Error al enviar mensaje de cancelacion al gmail");
-		}
-		try {
-			await reservationCancel({
-				name: reservation.clientName,
-				phoneNumber: reservation.clientPhoneNumber,
-				service: reservation.service.name,
-				date: formattedDate,
-				time: formattedTime,
-				worker: reservation.worker.name,
-			});
-		} catch (error) {
-			console.log("Error al enviar mensaje de cancelacion al whatsapp");
-		}
+		(async () => {
+			try {
+				await sendCancelReservation({
+					to: reservation.clientGmail,
+					name: reservation.clientName,
+					service: reservation.service.name,
+					time: formattedTime,
+					date: formattedDate,
+					worker: reservation.worker.name,
+				});
+			} catch (error) {
+				console.log(
+					"Error al enviar mensaje de cancelacion al Gmail:",
+					error.message,
+				);
+			}
 
-		await reservation.save();
+			try {
+				await reservationCancel({
+					name: reservation.clientName,
+					phoneNumber: reservation.clientPhoneNumber,
+					service: reservation.service.name,
+					date: formattedDate,
+					time: formattedTime,
+					worker: reservation.worker.name,
+				});
+			} catch (error) {
+				console.log(
+					"Error al enviar mensaje de cancelacion al WhatsApp:",
+					error.message,
+				);
+			}
+		})();
 
 		return res.status(200).json({ message: "Reserva cancelada", reservation });
 	} catch (error) {

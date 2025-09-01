@@ -332,7 +332,6 @@ export const getWorkerAvailableHours = async ({
 		let [hour, min] = startTimeStr.split(":").map(Number);
 		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
-
 		while (hour < endHour || (hour === endHour && min < endMin)) {
 			const slotDate = new Date(
 				parsedDate.getFullYear(),
@@ -343,7 +342,6 @@ export const getWorkerAvailableHours = async ({
 			);
 			const slotEndDate = addMinutes(slotDate, serviceDuration);
 			const slotStr = format(slotDate, "HH:mm");
-
 
 			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
 				timeSlots.push({ startTime: slotStr });
@@ -414,12 +412,12 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	if (availableSlots.length === 0) {
-	return {
-		source: customWorkingHours.length > 0 ? "custom" : "weekly",
-		message: "Ya no hay turnos disponibles para este día",
-		timeSlots: [],
-	};
-}
+		return {
+			source: customWorkingHours.length > 0 ? "custom" : "weekly",
+			message: "Ya no hay turnos disponibles para este día",
+			timeSlots: [],
+		};
+	}
 
 	return {
 		source: customWorkingHours.length > 0 ? "custom" : "weekly",

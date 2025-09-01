@@ -23,6 +23,11 @@ export const transporter = nodemailer.createTransport({
 		user: MAILER_USER,
 		pass: MAILER_PASSWORD,
 	},
+  tls: {
+    rejectUnauthorized: false,
+  },
+  logger: true,
+  debug: true,
 });
 
 // --- PLANTILLAS MJML ---
