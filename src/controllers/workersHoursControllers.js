@@ -239,7 +239,7 @@ export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 	const today = toZonedTime(new Date(), ARG_TIMEZONE);
 	const blockedDays = [];
-	const daysToCheck = 5;
+	const daysToCheck = 65;
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
@@ -266,14 +266,11 @@ export const getWorkerAvailableHours = async ({
 	serviceId,
 	date,
 }) => {
-	console.log("🔎 getWorkerAvailableHours() called with:", { workerId, serviceId, date });
 	const parsedDate = toZonedTime(
 		parseISO(`${date}T00:00:00-03:00`),
 		ARG_TIMEZONE,
 	);
 	const now = toZonedTime(new Date(), ARG_TIMEZONE);
-	console.log("📅 parsedDate:", parsedDate);
-	console.log("🕒 now:", now);
 
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 		return {
@@ -330,10 +327,8 @@ export const getWorkerAvailableHours = async ({
 
 	const timeSlots = [];
 	const shouldFilterPastTimes = isToday(parsedDate);
-	console.log("📌 shouldFilterPastTimes:", shouldFilterPastTimes);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
-		console.log(`🛠 Generating slots from ${startTimeStr} to ${endTimeStr}`);
 		let [hour, min] = startTimeStr.split(":").map(Number);
 		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
@@ -349,13 +344,9 @@ export const getWorkerAvailableHours = async ({
 			const slotEndDate = addMinutes(slotDate, serviceDuration);
 			const slotStr = format(slotDate, "HH:mm");
 
-			console.log("➡️ Slot candidate:", slotStr, "| slotDate:", slotDate);
 
 			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
-				console.log("✅ Slot agregado:", slotStr);
 				timeSlots.push({ startTime: slotStr });
-			}else {
-				console.log("❌ Slot descartado (pasado):", slotStr);
 			}
 
 			min += serviceDuration;
@@ -415,8 +406,6 @@ export const getWorkerAvailableHours = async ({
 
 		return !overlaps;
 	});
-
-	console.log("✅ availableSlots:", availableSlots);
 
 	availableSlots.sort((a, b) => {
 		const timeA = new Date(`1970-01-01T${a.startTime}:00Z`);

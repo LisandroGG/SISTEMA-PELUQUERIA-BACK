@@ -1,7 +1,13 @@
-import qrcode from "qrcode-terminal";
 import pkg from "whatsapp-web.js";
+import QRCode from "qrcode";
 
 const { Client, LocalAuth } = pkg;
+
+const whatsappStatus = {
+	qrCode: null,
+	qrBase64: null,
+	isReady: false,
+};
 
 const whatsapp = new Client({
 	authStrategy: new LocalAuth({
@@ -13,14 +19,29 @@ const whatsapp = new Client({
 	},
 });
 
-whatsapp.on("qr", (qr) => {
-	qrcode.generate(qr, {
-		small: true,
-	});
+whatsapp.on("qr", async(qr) => {
+	whatsappStatus.qrCode = qr;
+	whatsappStatus.isReady = false;
+	
+	try {
+    whatsappStatus.qrBase64 = await QRCode.toDataURL(qr);
+	console.log("Qr generado")
+	} catch (err) {
+    console.error("Error generando Base64 del QR:", err);
+    whatsappStatus.qrBase64 = null;
+	}
 });
 
 whatsapp.on("ready", () => {
-	console.log("Usuario listo");
+	whatsappStatus.qrCode = null;
+	whatsappStatus.qrBase64 = null;
+	whatsappStatus.isReady = true;
+	console.log("Usuario conectado")
 });
 
-export default whatsapp;
+whatsapp.on("disconnected", () => {
+	whatsappStatus.isReady = false;
+	console.log("Usuario desconectado")
+})
+
+export { whatsapp, whatsappStatus };
