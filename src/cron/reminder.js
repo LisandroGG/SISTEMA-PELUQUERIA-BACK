@@ -1,12 +1,11 @@
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { es } from "date-fns/locale";
 import cron from "node-cron";
 import { Op } from "sequelize";
-import { sendGmailReminder } from "../config/mailer.js";
 import { deleteFinishedReservations } from "../controllers/reservationsControllers.js";
 import {
 	formatDateToLongSpanish,
+	formatPhoneNumber,
 	formatTimeToHHMM,
 } from "../helpers/format.js";
 import { Reservation } from "../models/reservations.js";
@@ -44,28 +43,16 @@ cron.schedule("* * * * *", async () => {
 
 			const formattedDate = formatDateToLongSpanish(res.date);
 			const formattedTime = formatTimeToHHMM(res.startTime);
-
-			await sendGmailReminder({
-				to: res.clientGmail,
-				name: res.clientName,
-				service: res.service.name,
-				time: formattedTime,
-				date: formattedDate,
-				worker: res.worker.name,
-			});
+			const formattedPhoneNumber = formatPhoneNumber (res.clientPhoneNumber);
 
 			await reservationReminder({
 				name: res.clientName,
-				phoneNumber: res.clientPhoneNumber,
+				phoneNumber: formattedPhoneNumber,
 				service: res.service.name,
 				date: formattedDate,
 				time: formattedTime,
 				worker: res.worker.name,
 			});
-
-			console.log(
-				`Enviado recordatorio a ${res.clientGmail} para ${res.date} ${res.startTime}`,
-			);
 		}
 	} catch (error) {
 		console.error("Error en el cron de recordatorios:", error.message);

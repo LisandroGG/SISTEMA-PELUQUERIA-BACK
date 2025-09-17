@@ -55,10 +55,10 @@ export const registerUser = async (req, res) => {
 			role: "user",
 		});
 
-		const sentMail = await sendRegisterUser(name, gmail);
-		if (sentMail === false) {
-			return res.status(400).json({ message: "Error enviar el correo" });
-		}
+		// const sentMail = await sendRegisterUser(name, gmail);
+		// if (sentMail === false) {
+		// 	return res.status(400).json({ message: "Error enviar el correo" });
+		// }
 
 		return res.status(201).json({
 			message: "Cuenta creada exitosamente!",
@@ -213,7 +213,7 @@ export const forgotPassword = async (req, res) => {
 		if (!user)
 			return res.status(404).json({ message: "Usuario no encontrado" });
 
-		const sentEmail = await sendForgotPassword(user, gmail);
+		// const sentEmail = await sendForgotPassword(user, gmail);
 
 		if (sentEmail === false) {
 			return res
@@ -259,13 +259,13 @@ export const changePassword = async (req, res) => {
 
 		await user.save();
 
-		const sentEmail = await sendChangePassword(user);
+		// const sentEmail = await sendChangePassword(user);
 
-		if (sentEmail === false) {
-			return res
-				.status(400)
-				.json({ message: "Error enviar el correo de actualizacion" });
-		}
+		// if (sentEmail === false) {
+		// 	return res
+		// 		.status(400)
+		// 		.json({ message: "Error enviar el correo de actualizacion" });
+		// }
 
 		return res
 			.status(200)

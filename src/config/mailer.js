@@ -23,8 +23,6 @@ export const transporter = nodemailer.createTransport({
 		user: MAILER_USER,
 		pass: MAILER_PASSWORD,
 	},
-  logger: true,
-  debug: true,
 });
 
 // --- PLANTILLAS MJML ---

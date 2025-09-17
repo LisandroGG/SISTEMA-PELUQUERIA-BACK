@@ -6,7 +6,6 @@ import { sequelize } from "./src/database/database.js";
 import { mainRouter } from "./src/routes/index.js";
 import "./src/models/relationships.js";
 import "./src/cron/reminder.js";
-import whatsapp from "./src/whatsapp/index.js";
 
 dotenv.config();
 
@@ -41,8 +40,6 @@ app.use("/", mainRouter);
 async function main() {
 	try {
 		await sequelize.sync({ force: false });
-
-		//whatsapp.initialize();
 
 		app.listen(PORT, () => {
 			console.log(`Server is listening on port ${PORT}`);

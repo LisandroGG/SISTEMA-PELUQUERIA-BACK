@@ -1,110 +1,151 @@
-import whatsapp from "../whatsapp/index.js";
+import axios from "axios"
 
-const { LOCALHOST, MAILER_BARBER_NAME } = process.env;
+const { WHATSAPP_API_URL, WHATSAPP_TOKEN, WHATSAPP_PHONE } = process.env;
 
-export const reservationConfirm = async ({
+export const reservationConfirm = async({
 	name,
 	phoneNumber,
 	service,
+	worker,
 	date,
 	time,
-	worker,
 	token,
 }) => {
-	const tel = `+549${phoneNumber}`;
-	const chatId = `${tel.substring(1)}@c.us`;
-	const number_details = await whatsapp.getNumberId(chatId);
-	if (number_details) {
-		const message = `⏰ *RESERVA DE TURNO*
-
-Hola *${name}*
-
-Haz reservado un turno en *${MAILER_BARBER_NAME}*.
-
-✂️ Servicio: *${service}*
-💇‍♂️ Profesional: *${worker}*
-📅 Fecha: *${date}*
-🕛 Hora: *${time}*
-
-👉 Si necesitás cancelar tu turno, hacé clic en el enlace de abajo:
-${LOCALHOST}/cancel?token=${token}
-
-Gracias por tu confianza. Por favor, avisá con anticipación si no podés asistir.
-
-*No respondas a este mensaje directamente.*
-
-— *AF peluquería ✂️*`;
-		await whatsapp.sendMessage(chatId, message);
-		console.log("Mensaje Enviado por whatsapp");
-	} else {
-		console.log("Error al enviar mensaje por whatsapp");
+	try {
+		const response = await axios.post(
+			`${WHATSAPP_API_URL}/${WHATSAPP_PHONE}/messages`,
+			{
+				messaging_product: "whatsapp",
+				to: phoneNumber,
+				type: "template",
+				template: {
+					name: "turno_reservado",
+					language: { code: "es_AR" },
+					components: [
+						{
+							type: "body",
+							parameters: [
+								{ type: "text", text: name },
+								{ type: "text", text: service },
+								{ type: "text", text: worker},
+								{ type: "text", text: date },
+								{ type: "text", text: time },
+							]
+						},
+						{
+							type: "button",
+							sub_type: "url",
+							index: "0",
+							parameters: [
+								{
+									type: "text",
+									text: token
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				headers: {
+					Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+					"Content-Type": "application/json",
+				}
+			}
+		);
+		return response.data
+	} catch (error) {
+		console.log("Error al enviar mensaje", error.response?.data || error.message)
 	}
-};
+}
 
-export const reservationCancel = async ({
+export const reservationCancel = async({
 	name,
 	phoneNumber,
 	service,
+	worker,
 	date,
 	time,
-	worker,
 }) => {
-	const tel = `+549${phoneNumber}`;
-	const chatId = `${tel.substring(1)}@c.us`;
-	const number_details = await whatsapp.getNumberId(chatId);
-	if (number_details) {
-		const message = `⏰ *CANCELACION DE TURNO*
-
-Hola *${name}*
-
-Haz cancelado tu turno reservado en *${MAILER_BARBER_NAME}*.
-
-✂️ Servicio: *${service}*
-💇‍♂️ Profesional: *${worker}*
-📅 Fecha: *${date}*
-🕛 Hora: *${time}*
-
-*No respondas a este mensaje directamente.*
-
-— *AF peluquería ✂️*`;
-		await whatsapp.sendMessage(chatId, message);
-		console.log("Mensaje Enviado por whatsapp");
-	} else {
-		console.log("Error al enviar mensaje por whatsapp");
+	try {
+		const response = await axios.post(
+			`${WHATSAPP_API_URL}/${WHATSAPP_PHONE}/messages`,
+			{
+				messaging_product: "whatsapp",
+				to: phoneNumber,
+				type: "template",
+				template: {
+					name: "turno_cancelado",
+					language: { code: "es" },
+					components: [
+						{
+							type: "body",
+							parameters: [
+								{ type: "text", text: name },
+								{ type: "text", text: service },
+								{ type: "text", text: worker },
+								{ type: "text", text: date },
+								{ type: "text", text: time },
+							]
+						}
+					]
+				}
+			},
+						{
+				headers: {
+					Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+					"Content-Type": "application/json",
+				}
+			}
+		)
+		return response.data
+	} catch (error) {
+		console.log("Error al enviar mensaje", error.response?.data || error.message)
 	}
-};
+}
 
-export const reservationReminder = async ({
+export const reservationReminder = async({
 	name,
 	phoneNumber,
 	service,
+	worker,
 	date,
 	time,
-	worker,
 }) => {
-	const tel = `+549${phoneNumber}`;
-	const chatId = `${tel.substring(1)}@c.us`;
-	const number_details = await whatsapp.getNumberId(chatId);
-	if (number_details) {
-		const message = `⏰ *RECORDATORIO DE TURNO*
-
-Hola *${name}*
-
-Te recordamos que tenés un turno reservado en *${MAILER_BARBER_NAME}*.
-
-✂️ Servicio: *${service}*
-💇‍♂️ Profesional: *${worker}*
-📅 Fecha: *${date}*
-🕛 Hora: *${time}*
-
-Gracias por tu confianza. Te esperamos!.
-
-*No respondas a este mensaje directamente.*
-
-— *AF peluquería ✂️*`;
-		await whatsapp.sendMessage(chatId, message);
-		console.log("Mensaje Enviado por whatsapp");
-	} else {
-		console.log("Error al enviar mensaje por whatsapp");
+	try {
+		const response = await axios.post(
+			`${WHATSAPP_API_URL}/${WHATSAPP_PHONE}/messages`,
+			{
+				messaging_product: "whatsapp",
+				to: phoneNumber,
+				type: "template",
+				template: {
+					name: "turno_recordatorio",
+					language: { code: "es" },
+					components: [
+						{
+							type: "body",
+							parameters: [
+								{ type: "text", text: name },
+								{ type: "text", text: service },
+								{ type: "text", text: worker },
+								{ type: "text", text: date },
+								{ type: "text", text: time },
+							]
+						}
+					]
+				}
+			},
+						{
+				headers: {
+					Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+					"Content-Type": "application/json",
+				}
+			}
+		)
+		return response.data
+	} catch (error) {
+		console.log("Error al enviar mensaje", error.response?.data || error.message)
 	}
-};
+}
+

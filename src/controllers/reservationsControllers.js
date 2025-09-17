@@ -5,6 +5,7 @@ import { Op } from "sequelize";
 import { sendCancelReservation, sendNewReservation } from "../config/mailer.js";
 import {
 	formatDateToLongSpanish,
+	formatPhoneNumber,
 	formatTimeToHHMM,
 } from "../helpers/format.js";
 import { CustomWorkingHour } from "../models/customWorkingHours.js";
@@ -150,6 +151,7 @@ export const createReservation = async (req, res) => {
 
 		const formattedDate = formatDateToLongSpanish(fullReservation.date);
 		const formattedTime = formatTimeToHHMM(fullReservation.startTime);
+		const formattedPhoneNumber = formatPhoneNumber(fullReservation.clientPhoneNumber);
 
 		(async () => {
 			try {
@@ -169,7 +171,7 @@ export const createReservation = async (req, res) => {
 			try {
 				await reservationConfirm({
 					name: fullReservation.clientName,
-					phoneNumber: fullReservation.clientPhoneNumber,
+					phoneNumber: formattedPhoneNumber,
 					service: fullReservation.service.name,
 					date: formattedDate,
 					time: formattedTime,
@@ -329,6 +331,7 @@ export const cancelReservation = async (req, res) => {
 
 		const formattedDate = formatDateToLongSpanish(reservation.date);
 		const formattedTime = formatTimeToHHMM(reservation.startTime);
+		const formattedPhoneNumber = formatPhoneNumber(reservation.clientPhoneNumber);
 
 		(async () => {
 			try {
@@ -346,11 +349,10 @@ export const cancelReservation = async (req, res) => {
 					error.message,
 				);
 			}
-
 			try {
 				await reservationCancel({
 					name: reservation.clientName,
-					phoneNumber: reservation.clientPhoneNumber,
+					phoneNumber: formattedPhoneNumber,
 					service: reservation.service.name,
 					date: formattedDate,
 					time: formattedTime,
