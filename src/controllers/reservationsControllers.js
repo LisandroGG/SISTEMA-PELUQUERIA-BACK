@@ -154,19 +154,19 @@ export const createReservation = async (req, res) => {
 		const formattedPhoneNumber = formatPhoneNumber(fullReservation.clientPhoneNumber);
 
 		(async () => {
-			try {
-				await sendNewReservation({
-					to: fullReservation.clientGmail,
-					name: fullReservation.clientName,
-					service: fullReservation.service.name,
-					time: formattedTime,
-					date: formattedDate,
-					worker: fullReservation.worker.name,
-					token: token,
-				});
-			} catch (error) {
-				console.log("Error al enviar mensaje de Gmail:", error.message);
-			}
+			// try {
+			// 	await sendNewReservation({
+			// 		to: fullReservation.clientGmail,
+			// 		name: fullReservation.clientName,
+			// 		service: fullReservation.service.name,
+			// 		time: formattedTime,
+			// 		date: formattedDate,
+			// 		worker: fullReservation.worker.name,
+			// 		token: token,
+			// 	});
+			// } catch (error) {
+			// 	console.log("Error al enviar mensaje de Gmail:", error.message);
+			// }
 
 			try {
 				await reservationConfirm({
@@ -334,21 +334,21 @@ export const cancelReservation = async (req, res) => {
 		const formattedPhoneNumber = formatPhoneNumber(reservation.clientPhoneNumber);
 
 		(async () => {
-			try {
-				await sendCancelReservation({
-					to: reservation.clientGmail,
-					name: reservation.clientName,
-					service: reservation.service.name,
-					time: formattedTime,
-					date: formattedDate,
-					worker: reservation.worker.name,
-				});
-			} catch (error) {
-				console.log(
-					"Error al enviar mensaje de cancelacion al Gmail:",
-					error.message,
-				);
-			}
+			// try {
+			// 	await sendCancelReservation({
+			// 		to: reservation.clientGmail,
+			// 		name: reservation.clientName,
+			// 		service: reservation.service.name,
+			// 		time: formattedTime,
+			// 		date: formattedDate,
+			// 		worker: reservation.worker.name,
+			// 	});
+			// } catch (error) {
+			// 	console.log(
+			// 		"Error al enviar mensaje de cancelacion al Gmail:",
+			// 		error.message,
+			// 	);
+			// }
 			try {
 				await reservationCancel({
 					name: reservation.clientName,
