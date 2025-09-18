@@ -239,7 +239,7 @@ export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 	const today = toZonedTime(new Date(), ARG_TIMEZONE);
 	const blockedDays = [];
-	const daysToCheck = 2;
+	const daysToCheck = 65;
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
@@ -270,7 +270,7 @@ export const getWorkerAvailableHours = async ({
 		parseISO(`${date}T00:00:00-03:00`),
 		ARG_TIMEZONE,
 	);
-	const now = new Date("2025-09-18T22:00:00-03:00");
+	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
 	console.log("Debug fechas");
 	console.log("Input date:", date);
