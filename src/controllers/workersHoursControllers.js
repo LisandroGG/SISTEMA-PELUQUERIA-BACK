@@ -261,201 +261,217 @@ export const getBlockedDays = async (req, res) => {
 	return res.status(200).json({ blockedDays });
 };
 
-export const getWorkerAvailableHours = async ({
-	workerId,
-	serviceId,
-	date,
-}) => {
-	const parsedDate = toZonedTime(
-		parseISO(`${date}T00:00:00-03:00`),
-		ARG_TIMEZONE,
-	);
-	const now = toZonedTime(new Date(), ARG_TIMEZONE);
+export const getWorkerAvailableHours = async ({ workerId, serviceId, date }) => {
+  const parsedDate = toZonedTime(
+    parseISO(`${date}T00:00:00-03:00`),
+    ARG_TIMEZONE
+  );
+  const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
-	console.log("📌 [getWorkerAvailableHours]");
-	console.log("➡️ Fecha solicitada:", date);
-	console.log("➡️ parsedDate:", parsedDate);
-	console.log("➡️ now:", now);
+  if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
+    return {
+      source: "past",
+      message: "No se pueden consultar horarios de fechas pasadas",
+      timeSlots: [],
+    };
+  }
 
-	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
-		console.log("⛔ Fecha pasada, se bloquea el día");
-		return {
-			source: "past",
-			message: "No se pueden consultar horarios de fechas pasadas",
-			timeSlots: [],
-		};
-	}
+  const dayOfWeek = format(parsedDate, "eeee", { locale: es });
 
-	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
-	console.log("➡️ Día de la semana:", dayOfWeek);
+  const service = await Service.findByPk(serviceId, {
+    include: [{ model: Worker, as: "Workers" }],
+  });
 
-	const service = await Service.findByPk(serviceId, {
-		include: [{ model: Worker, as: "Workers" }],
-	});
+  if (!service) {
+    return {
+      source: "no_find_service",
+      message: "Servicio no encontrado",
+      timeSlots: [],
+    };
+  }
 
-	if (!service) {
-		console.log("⛔ Servicio no encontrado:", serviceId);
-		return {
-			source: "no_find_service",
-			message: "Servicio no encontrado",
-			timeSlots: [],
-		};
-	}
+  const workerIsAssigned = service.Workers.some(
+    (worker) => worker.id === Number.parseInt(workerId)
+  );
 
-	const workerIsAssigned = service.Workers.some(
-		(worker) => worker.id === Number.parseInt(workerId),
-	);
+  if (!workerIsAssigned) {
+    return {
+      source: "not_assigned",
+      message: "Este trabajador no ofrece el servicio seleccionado",
+      timeSlots: [],
+    };
+  }
 
-	if (!workerIsAssigned) {
-		console.log("⛔ Trabajador no asignado al servicio");
-		return {
-			source: "not_assigned",
-			message: "Este trabajador no ofrece el servicio seleccionado",
-			timeSlots: [],
-		};
-	}
+  const serviceDuration = service.duration;
 
-	const serviceDuration = service.duration;
-	console.log("➡️ Duración del servicio:", serviceDuration, "minutos");
+  const disabled = await DisableDay.findOne({
+    where: { workerId, day: date },
+  });
 
-	const disabled = await DisableDay.findOne({
-		where: { workerId, day: date },
-	});
+  if (disabled) {
+    return {
+      source: "disabled",
+      message: "El día está deshabilitado para este trabajador",
+      timeSlots: [],
+    };
+  }
 
-	if (disabled) {
-		console.log("⛔ Día deshabilitado para el trabajador");
-		return {
-			source: "disabled",
-			message: "El día está deshabilitado para este trabajador",
-			timeSlots: [],
-		};
-	}
+  const customWorkingHours = await CustomWorkingHour.findAll({
+    where: { workerId, dayOfWeek: date },
+    include: [{ model: Worker, as: "worker" }],
+  });
 
-	const customWorkingHours = await CustomWorkingHour.findAll({
-		where: { workerId, dayOfWeek: date },
-		include: [{ model: Worker, as: "worker" }],
-	});
-	console.log("➡️ customWorkingHours:", customWorkingHours);
+  const timeSlots = [];
+  const shouldFilterPastTimes = isToday(parsedDate);
 
-	const timeSlots = [];
-	const shouldFilterPastTimes = isToday(parsedDate);
+  const generateSlots = (startTimeStr, endTimeStr) => {
+    let [hour, min] = startTimeStr.split(":").map(Number);
+    const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
-	const generateSlots = (startTimeStr, endTimeStr) => {
-		console.log(`⏰ Generando slots desde ${startTimeStr} hasta ${endTimeStr}`);
-		let [hour, min] = startTimeStr.split(":").map(Number);
-		const [endHour, endMin] = endTimeStr.split(":").map(Number);
+    while (hour < endHour || (hour === endHour && min < endMin)) {
+      const slotDate = new Date(
+        parsedDate.getFullYear(),
+        parsedDate.getMonth(),
+        parsedDate.getDate(),
+        hour,
+        min
+      );
+      const slotStr = format(slotDate, "HH:mm");
 
-		while (hour < endHour || (hour === endHour && min < endMin)) {
-			const slotDate = new Date(
-				parsedDate.getFullYear(),
-				parsedDate.getMonth(),
-				parsedDate.getDate(),
-				hour,
-				min,
-			);
-			const slotEndDate = addMinutes(slotDate, serviceDuration);
-			const slotStr = format(slotDate, "HH:mm");
+      if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
+        timeSlots.push({ startTime: slotStr });
+      }
 
-			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
-				console.log("✅ Slot válido:", slotStr);
-				timeSlots.push({ startTime: slotStr });
-			} else {
-				console.log("❌ Slot descartado por ser pasado:", slotStr);
-			}
+      min += serviceDuration;
+      while (min >= 60) {
+        min -= 60;
+        hour += 1;
+      }
+    }
+  };
 
-			min += serviceDuration;
-			while (min >= 60) {
-				min -= 60;
-				hour += 1;
-			}
-		}
-	};
+  if (customWorkingHours.length > 0) {
+    for (const customHour of customWorkingHours) {
+      generateSlots(customHour.startTime, customHour.endTime);
+    }
+  } else {
+    let workingHours = await WorkingHour.findAll({
+      where: { workerId, dayOfWeek },
+      include: [{ model: Worker, as: "worker" }],
+    });
 
-	if (customWorkingHours.length > 0) {
-		for (const customHour of customWorkingHours) {
-			generateSlots(customHour.startTime, customHour.endTime);
-		}
-	} else {
-		const workingHours = await WorkingHour.findAll({
-			where: { workerId, dayOfWeek },
-			include: [{ model: Worker, as: "worker" }],
-		});
-		console.log("➡️ workingHours:", workingHours);
-		for (const work of workingHours) {
-			generateSlots(work.startTime, work.endTime);
-		}
-	}
+    // 🔹 Eliminar bloques duplicados
+    const uniqueHours = [];
+    for (const work of workingHours) {
+      if (
+        !uniqueHours.some(
+          (h) => h.startTime === work.startTime && h.endTime === work.endTime
+        )
+      ) {
+        uniqueHours.push(work);
+      }
+    }
 
-	console.log("📊 Slots generados (antes de reservas):", timeSlots);
+    for (const work of uniqueHours) {
+      generateSlots(work.startTime, work.endTime);
+    }
+  }
 
-	const existingReservations = await Reservation.findAll({
-		where: {
-			workerId,
-			date,
-			status: {
-				[Op.notIn]: ["cancel"],
-			},
-		},
-		attributes: ["startTime", "endTime"],
-	});
+  const existingReservations = await Reservation.findAll({
+    where: {
+      workerId,
+      date,
+      status: {
+        [Op.notIn]: ["cancel"],
+      },
+    },
+    attributes: ["startTime", "endTime"],
+  });
 
-	console.log("📌 Reservas existentes:", existingReservations);
+  const reservedRanges = existingReservations.map((res) => {
+    const resStart = parse(
+      res.startTime,
+      "HH:mm:ss",
+      new Date(`${date}T00:00`)
+    );
+    const resEnd = parse(res.endTime, "HH:mm:ss", new Date(`${date}T00:00`));
+    return { resStart, resEnd };
+  });
 
-	const reservedRanges = existingReservations.map((res) => {
-		const resStart = parse(
-			res.startTime,
-			"HH:mm:ss",
-			new Date(`${date}T00:00`),
-		);
-		const resEnd = parse(res.endTime, "HH:mm:ss", new Date(`${date}T00:00`));
-		return { resStart, resEnd };
-	});
-	console.log("📌 Rangos reservados:", reservedRanges);
+  const availableSlots = timeSlots.filter((slot) => {
+    const slotStart = parse(
+      slot.startTime,
+      "HH:mm",
+      new Date(`${date}T00:00`)
+    );
+    const slotEnd = addMinutes(slotStart, serviceDuration);
 
-	const availableSlots = timeSlots.filter((slot) => {
-		const slotStart = parse(slot.startTime, "HH:mm", new Date(`${date}T00:00`));
-		const slotEnd = addMinutes(slotStart, serviceDuration);
+    const overlaps = reservedRanges.some(({ resStart, resEnd }) => {
+      return (
+        (slotStart >= resStart && slotStart < resEnd) ||
+        (slotEnd > resStart && slotEnd <= resEnd) ||
+        (slotStart <= resStart && slotEnd >= resEnd)
+      );
+    });
 
-		const overlaps = reservedRanges.some(({ resStart, resEnd }) => {
-			return (
-				(slotStart >= resStart && slotStart < resEnd) ||
-				(slotEnd > resStart && slotEnd <= resEnd) ||
-				(slotStart <= resStart && slotEnd >= resEnd)
-			);
-		});
+    return !overlaps;
+  });
 
-		if (overlaps) {
-			console.log("❌ Slot ocupado:", slot.startTime);
-		} else {
-			console.log("✅ Slot libre:", slot.startTime);
-		}
+  availableSlots.sort((a, b) => {
+    const timeA = new Date(`1970-01-01T${a.startTime}:00Z`);
+    const timeB = new Date(`1970-01-01T${b.startTime}:00Z`);
+    return timeA - timeB;
+  });
 
-		return !overlaps;
-	});
+  // 🔹 Chequear si el día ya terminó
+  if (availableSlots.length === 0) {
+    let lastEndTimeStr = null;
 
-	availableSlots.sort((a, b) => {
-		const timeA = new Date(`1970-01-01T${a.startTime}:00Z`);
-		const timeB = new Date(`1970-01-01T${b.startTime}:00Z`);
-		return timeA - timeB;
-	});
+    if (customWorkingHours.length > 0) {
+      lastEndTimeStr = customWorkingHours.reduce(
+        (max, h) => (!max || h.endTime > max ? h.endTime : max),
+        null
+      );
+    } else {
+      const workingHours = await WorkingHour.findAll({
+        where: { workerId, dayOfWeek },
+      });
+      lastEndTimeStr = workingHours.reduce(
+        (max, h) => (!max || h.endTime > max ? h.endTime : max),
+        null
+      );
+    }
 
-	console.log("📊 Slots finales disponibles:", availableSlots);
+    if (lastEndTimeStr) {
+      const [h, m] = lastEndTimeStr.split(":").map(Number);
+      const endOfWork = new Date(
+        parsedDate.getFullYear(),
+        parsedDate.getMonth(),
+        parsedDate.getDate(),
+        h,
+        m
+      );
 
-	if (availableSlots.length === 0) {
-		console.log("⚠️ No hay turnos disponibles para el día:", date);
-		return {
-			source: customWorkingHours.length > 0 ? "custom" : "weekly",
-			message: "Ya no hay turnos disponibles para este día",
-			timeSlots: [],
-		};
-	}
+      if (isToday(parsedDate) && isAfter(now, endOfWork)) {
+        return {
+          source: "past_hours",
+          message: "El horario laboral ya finalizó para hoy",
+          timeSlots: [],
+        };
+      }
+    }
 
-	console.log("✅ Devolviendo slots disponibles:", availableSlots);
+    return {
+      source: customWorkingHours.length > 0 ? "custom" : "weekly",
+      message: "Ya no hay turnos disponibles para este día",
+      timeSlots: [],
+    };
+  }
 
-	return {
-		source: customWorkingHours.length > 0 ? "custom" : "weekly",
-		timeSlots: availableSlots,
-	};
+  return {
+    source: customWorkingHours.length > 0 ? "custom" : "weekly",
+    timeSlots: availableSlots,
+  };
 };
 
 export const editWorkingHour = async (req, res) => {
