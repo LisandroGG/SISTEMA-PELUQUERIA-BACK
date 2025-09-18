@@ -239,7 +239,7 @@ export const getBlockedDays = async (req, res) => {
 	const { workerId, serviceId } = req.query;
 	const today = toZonedTime(new Date(), ARG_TIMEZONE);
 	const blockedDays = [];
-	const daysToCheck = 65;
+	const daysToCheck = 3;
 
 	for (let i = 0; i < daysToCheck; i++) {
 		const date = format(addDays(today, i), "yyyy-MM-dd");
@@ -272,7 +272,13 @@ export const getWorkerAvailableHours = async ({
 	);
 	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
+	console.log("📌 [getWorkerAvailableHours]");
+	console.log("➡️ Fecha solicitada:", date);
+	console.log("➡️ parsedDate:", parsedDate);
+	console.log("➡️ now:", now);
+
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
+		console.log("⛔ Fecha pasada, se bloquea el día");
 		return {
 			source: "past",
 			message: "No se pueden consultar horarios de fechas pasadas",
@@ -281,12 +287,14 @@ export const getWorkerAvailableHours = async ({
 	}
 
 	const dayOfWeek = format(parsedDate, "eeee", { locale: es });
+	console.log("➡️ Día de la semana:", dayOfWeek);
 
 	const service = await Service.findByPk(serviceId, {
 		include: [{ model: Worker, as: "Workers" }],
 	});
 
 	if (!service) {
+		console.log("⛔ Servicio no encontrado:", serviceId);
 		return {
 			source: "no_find_service",
 			message: "Servicio no encontrado",
@@ -299,6 +307,7 @@ export const getWorkerAvailableHours = async ({
 	);
 
 	if (!workerIsAssigned) {
+		console.log("⛔ Trabajador no asignado al servicio");
 		return {
 			source: "not_assigned",
 			message: "Este trabajador no ofrece el servicio seleccionado",
@@ -307,12 +316,14 @@ export const getWorkerAvailableHours = async ({
 	}
 
 	const serviceDuration = service.duration;
+	console.log("➡️ Duración del servicio:", serviceDuration, "minutos");
 
 	const disabled = await DisableDay.findOne({
 		where: { workerId, day: date },
 	});
 
 	if (disabled) {
+		console.log("⛔ Día deshabilitado para el trabajador");
 		return {
 			source: "disabled",
 			message: "El día está deshabilitado para este trabajador",
@@ -324,11 +335,13 @@ export const getWorkerAvailableHours = async ({
 		where: { workerId, dayOfWeek: date },
 		include: [{ model: Worker, as: "worker" }],
 	});
+	console.log("➡️ customWorkingHours:", customWorkingHours);
 
 	const timeSlots = [];
 	const shouldFilterPastTimes = isToday(parsedDate);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
+		console.log(`⏰ Generando slots desde ${startTimeStr} hasta ${endTimeStr}`);
 		let [hour, min] = startTimeStr.split(":").map(Number);
 		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
@@ -344,7 +357,10 @@ export const getWorkerAvailableHours = async ({
 			const slotStr = format(slotDate, "HH:mm");
 
 			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
+				console.log("✅ Slot válido:", slotStr);
 				timeSlots.push({ startTime: slotStr });
+			} else {
+				console.log("❌ Slot descartado por ser pasado:", slotStr);
 			}
 
 			min += serviceDuration;
@@ -364,10 +380,13 @@ export const getWorkerAvailableHours = async ({
 			where: { workerId, dayOfWeek },
 			include: [{ model: Worker, as: "worker" }],
 		});
+		console.log("➡️ workingHours:", workingHours);
 		for (const work of workingHours) {
 			generateSlots(work.startTime, work.endTime);
 		}
 	}
+
+	console.log("📊 Slots generados (antes de reservas):", timeSlots);
 
 	const existingReservations = await Reservation.findAll({
 		where: {
@@ -380,6 +399,8 @@ export const getWorkerAvailableHours = async ({
 		attributes: ["startTime", "endTime"],
 	});
 
+	console.log("📌 Reservas existentes:", existingReservations);
+
 	const reservedRanges = existingReservations.map((res) => {
 		const resStart = parse(
 			res.startTime,
@@ -389,6 +410,7 @@ export const getWorkerAvailableHours = async ({
 		const resEnd = parse(res.endTime, "HH:mm:ss", new Date(`${date}T00:00`));
 		return { resStart, resEnd };
 	});
+	console.log("📌 Rangos reservados:", reservedRanges);
 
 	const availableSlots = timeSlots.filter((slot) => {
 		const slotStart = parse(slot.startTime, "HH:mm", new Date(`${date}T00:00`));
@@ -402,6 +424,12 @@ export const getWorkerAvailableHours = async ({
 			);
 		});
 
+		if (overlaps) {
+			console.log("❌ Slot ocupado:", slot.startTime);
+		} else {
+			console.log("✅ Slot libre:", slot.startTime);
+		}
+
 		return !overlaps;
 	});
 
@@ -411,50 +439,18 @@ export const getWorkerAvailableHours = async ({
 		return timeA - timeB;
 	});
 
+	console.log("📊 Slots finales disponibles:", availableSlots);
+
 	if (availableSlots.length === 0) {
-	// Calcular el último horario de trabajo (el final más tarde de ese día)
-	let lastEndTime = null;
-
-	if (customWorkingHours.length > 0) {
-		lastEndTime = customWorkingHours.reduce((max, h) => {
-			return max && max > h.endTime ? max : h.endTime;
-		}, null);
-	} else {
-		const workingHours = await WorkingHour.findAll({
-			where: { workerId, dayOfWeek },
-		});
-		lastEndTime = workingHours.reduce((max, h) => {
-			return max && max > h.endTime ? max : h.endTime;
-		}, null);
+		console.log("⚠️ No hay turnos disponibles para el día:", date);
+		return {
+			source: customWorkingHours.length > 0 ? "custom" : "weekly",
+			message: "Ya no hay turnos disponibles para este día",
+			timeSlots: [],
+		};
 	}
 
-	if (lastEndTime) {
-		// Convertir lastEndTime en datetime real del día
-		const [h, m] = lastEndTime.split(":").map(Number);
-		const endOfWork = new Date(
-			parsedDate.getFullYear(),
-			parsedDate.getMonth(),
-			parsedDate.getDate(),
-			h,
-			m,
-		);
-
-		if (isToday(parsedDate) && isAfter(now, endOfWork)) {
-			return {
-				source: "past_hours",
-				message: "El horario laboral ya finalizó para hoy",
-				timeSlots: [],
-			};
-		}
-	}
-
-	// Caso normal: ya no hay turnos (por reservas, overlaps, etc.)
-	return {
-		source: customWorkingHours.length > 0 ? "custom" : "weekly",
-		message: "Ya no hay turnos disponibles para este día",
-		timeSlots: [],
-	};
-}
+	console.log("✅ Devolviendo slots disponibles:", availableSlots);
 
 	return {
 		source: customWorkingHours.length > 0 ? "custom" : "weekly",
