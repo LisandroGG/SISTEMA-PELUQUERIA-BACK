@@ -270,7 +270,7 @@ export const getWorkerAvailableHours = async ({
 		parseISO(`${date}T00:00:00-03:00`),
 		ARG_TIMEZONE,
 	);
-	const now = toZonedTime(new Date(), ARG_TIMEZONE);
+	const now = new Date("2025-09-18T22:00:00-03:00");
 
 	console.log("Debug fechas");
 	console.log("Input date:", date);
