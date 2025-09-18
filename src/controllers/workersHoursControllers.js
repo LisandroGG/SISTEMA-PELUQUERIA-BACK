@@ -412,12 +412,49 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	if (availableSlots.length === 0) {
-		return {
-			source: customWorkingHours.length > 0 ? "custom" : "weekly",
-			message: "Ya no hay turnos disponibles para este día",
-			timeSlots: [],
-		};
+	// Calcular el último horario de trabajo (el final más tarde de ese día)
+	let lastEndTime = null;
+
+	if (customWorkingHours.length > 0) {
+		lastEndTime = customWorkingHours.reduce((max, h) => {
+			return max && max > h.endTime ? max : h.endTime;
+		}, null);
+	} else {
+		const workingHours = await WorkingHour.findAll({
+			where: { workerId, dayOfWeek },
+		});
+		lastEndTime = workingHours.reduce((max, h) => {
+			return max && max > h.endTime ? max : h.endTime;
+		}, null);
 	}
+
+	if (lastEndTime) {
+		// Convertir lastEndTime en datetime real del día
+		const [h, m] = lastEndTime.split(":").map(Number);
+		const endOfWork = new Date(
+			parsedDate.getFullYear(),
+			parsedDate.getMonth(),
+			parsedDate.getDate(),
+			h,
+			m,
+		);
+
+		if (isToday(parsedDate) && isAfter(now, endOfWork)) {
+			return {
+				source: "past_hours",
+				message: "El horario laboral ya finalizó para hoy",
+				timeSlots: [],
+			};
+		}
+	}
+
+	// Caso normal: ya no hay turnos (por reservas, overlaps, etc.)
+	return {
+		source: customWorkingHours.length > 0 ? "custom" : "weekly",
+		message: "Ya no hay turnos disponibles para este día",
+		timeSlots: [],
+	};
+}
 
 	return {
 		source: customWorkingHours.length > 0 ? "custom" : "weekly",
