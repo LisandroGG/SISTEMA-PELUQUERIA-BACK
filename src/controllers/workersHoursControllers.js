@@ -423,18 +423,23 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	if (availableSlots.length > 0) {
-		console.log(
-			"Último turno disponible:",
-			availableSlots[availableSlots.length - 1],
-		);
-	}
+		const lastSlot = availableSlots[availableSlots.length - 1];
+		const lastSlotDate = parse(
+			lastSlot.startTime,
+			"HH:mm",
+			new Date(`${date}T00:00`),
+		);	
 
-	if (availableSlots.length === 0) {
-		return {
-			source: customWorkingHours.length > 0 ? "custom" : "weekly",
-			message: "Ya no hay turnos disponibles para este día",
-			timeSlots: [],
-		};
+		if (isBefore(lastSlotDate, now)) {
+			console.log("Último turno ya pasó:", lastSlot);
+			return {
+				source: customWorkingHours.length > 0 ? "custom" : "weekly",
+				message: "Ya no hay turnos disponibles para este día",
+				timeSlots: [],
+			};
+		}
+
+		console.log("Último turno aún válido:", lastSlot);
 	}
 
 	return {
