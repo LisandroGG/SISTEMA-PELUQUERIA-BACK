@@ -272,6 +272,11 @@ export const getWorkerAvailableHours = async ({
 	);
 	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
+	console.log("Debug fechas");
+	console.log("Input date:", date);
+	console.log("parsedDate (inicio del día):", parsedDate);
+	console.log("now (ARG):", now);
+
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 		return {
 			source: "past",
@@ -329,6 +334,7 @@ export const getWorkerAvailableHours = async ({
 	const shouldFilterPastTimes = isToday(parsedDate);
 
 	const generateSlots = (startTimeStr, endTimeStr) => {
+		console.log("Generando slots entre:", startTimeStr, "->", endTimeStr);
 		let [hour, min] = startTimeStr.split(":").map(Number);
 		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
@@ -342,6 +348,11 @@ export const getWorkerAvailableHours = async ({
 			);
 			const slotEndDate = addMinutes(slotDate, serviceDuration);
 			const slotStr = format(slotDate, "HH:mm");
+
+			console.log(
+			"Slot generado:",
+			{ rawDate: slotDate, formatted: slotStr, slotEnd: slotEndDate },
+			);
 
 			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
 				timeSlots.push({ startTime: slotStr });
@@ -410,6 +421,13 @@ export const getWorkerAvailableHours = async ({
 		const timeB = new Date(`1970-01-01T${b.startTime}:00Z`);
 		return timeA - timeB;
 	});
+
+	if (availableSlots.length > 0) {
+		console.log(
+			"Último turno disponible:",
+			availableSlots[availableSlots.length - 1],
+		);
+	}
 
 	if (availableSlots.length === 0) {
 		return {
