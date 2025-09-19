@@ -331,40 +331,40 @@ export const getWorkerAvailableHours = async ({
 	});
 
 	const timeSlots = [];
-	const shouldFilterPastTimes = isToday(parsedDate);
 
-	const generateSlots = (startTimeStr, endTimeStr) => {
-		console.log("Generando slots entre:", startTimeStr, "->", endTimeStr);
-		let [hour, min] = startTimeStr.split(":").map(Number);
-		const [endHour, endMin] = endTimeStr.split(":").map(Number);
+const generateSlots = (startTimeStr, endTimeStr) => {
+	console.log("Generando slots entre:", startTimeStr, "->", endTimeStr);
+	let [hour, min] = startTimeStr.split(":").map(Number);
+	const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
-		while (hour < endHour || (hour === endHour && min < endMin)) {
-			const slotDate = new Date(
-				parsedDate.getFullYear(),
-				parsedDate.getMonth(),
-				parsedDate.getDate(),
-				hour,
-				min,
-			);
-			const slotEndDate = addMinutes(slotDate, serviceDuration);
-			const slotStr = format(slotDate, "HH:mm");
+	while (hour < endHour || (hour === endHour && min < endMin)) {
+		const slotDate = new Date(
+			parsedDate.getFullYear(),
+			parsedDate.getMonth(),
+			parsedDate.getDate(),
+			hour,
+			min,
+		);
+		const slotEndDate = addMinutes(slotDate, serviceDuration);
+		const slotStr = format(slotDate, "HH:mm");
 
-			console.log(
-			"Slot generado:",
-			{ rawDate: slotDate, formatted: slotStr, slotEnd: slotEndDate },
-			);
+		console.log("Slot generado:", {
+			rawDate: slotDate,
+			formatted: slotStr,
+			slotEnd: slotEndDate,
+		});
 
-			if (!shouldFilterPastTimes || isAfter(slotDate, now)) {
-				timeSlots.push({ startTime: slotStr });
-			}
-
-			min += serviceDuration;
-			while (min >= 60) {
-				min -= 60;
-				hour += 1;
-			}
+		if (isAfter(slotDate, now)) {
+			timeSlots.push({ startTime: slotStr });
 		}
-	};
+
+		min += serviceDuration;
+		while (min >= 60) {
+			min -= 60;
+			hour += 1;
+		}
+	}
+};
 
 	if (customWorkingHours.length > 0) {
 		for (const customHour of customWorkingHours) {
