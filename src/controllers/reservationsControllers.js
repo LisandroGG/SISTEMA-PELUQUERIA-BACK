@@ -151,7 +151,9 @@ export const createReservation = async (req, res) => {
 
 		const formattedDate = formatDateToLongSpanish(fullReservation.date);
 		const formattedTime = formatTimeToHHMM(fullReservation.startTime);
-		const formattedPhoneNumber = formatPhoneNumber(fullReservation.clientPhoneNumber);
+		const formattedPhoneNumber = formatPhoneNumber(
+			fullReservation.clientPhoneNumber,
+		);
 
 		(async () => {
 			// try {
@@ -331,7 +333,9 @@ export const cancelReservation = async (req, res) => {
 
 		const formattedDate = formatDateToLongSpanish(reservation.date);
 		const formattedTime = formatTimeToHHMM(reservation.startTime);
-		const formattedPhoneNumber = formatPhoneNumber(reservation.clientPhoneNumber);
+		const formattedPhoneNumber = formatPhoneNumber(
+			reservation.clientPhoneNumber,
+		);
 
 		(async () => {
 			// try {

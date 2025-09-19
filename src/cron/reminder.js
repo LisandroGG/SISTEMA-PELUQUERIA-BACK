@@ -43,7 +43,7 @@ cron.schedule("* * * * *", async () => {
 
 			const formattedDate = formatDateToLongSpanish(res.date);
 			const formattedTime = formatTimeToHHMM(res.startTime);
-			const formattedPhoneNumber = formatPhoneNumber (res.clientPhoneNumber);
+			const formattedPhoneNumber = formatPhoneNumber(res.clientPhoneNumber);
 
 			await reservationReminder({
 				name: res.clientName,

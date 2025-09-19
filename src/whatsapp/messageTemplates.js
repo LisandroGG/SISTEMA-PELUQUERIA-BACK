@@ -1,8 +1,8 @@
-import axios from "axios"
+import axios from "axios";
 
 const { WHATSAPP_API_URL, WHATSAPP_TOKEN, WHATSAPP_PHONE } = process.env;
 
-export const reservationConfirm = async({
+export const reservationConfirm = async ({
 	name,
 	phoneNumber,
 	service,
@@ -27,10 +27,10 @@ export const reservationConfirm = async({
 							parameters: [
 								{ type: "text", text: name },
 								{ type: "text", text: service },
-								{ type: "text", text: worker},
+								{ type: "text", text: worker },
 								{ type: "text", text: date },
 								{ type: "text", text: time },
-							]
+							],
 						},
 						{
 							type: "button",
@@ -39,27 +39,30 @@ export const reservationConfirm = async({
 							parameters: [
 								{
 									type: "text",
-									text: token
-								}
-							]
-						}
-					]
-				}
+									text: token,
+								},
+							],
+						},
+					],
+				},
 			},
 			{
 				headers: {
 					Authorization: `Bearer ${WHATSAPP_TOKEN}`,
 					"Content-Type": "application/json",
-				}
-			}
+				},
+			},
 		);
-		return response.data
+		return response.data;
 	} catch (error) {
-		console.log("Error al enviar mensaje", error.response?.data || error.message)
+		console.log(
+			"Error al enviar mensaje",
+			error.response?.data || error.message,
+		);
 	}
-}
+};
 
-export const reservationCancel = async({
+export const reservationCancel = async ({
 	name,
 	phoneNumber,
 	service,
@@ -86,25 +89,28 @@ export const reservationCancel = async({
 								{ type: "text", text: worker },
 								{ type: "text", text: date },
 								{ type: "text", text: time },
-							]
-						}
-					]
-				}
+							],
+						},
+					],
+				},
 			},
-						{
+			{
 				headers: {
 					Authorization: `Bearer ${WHATSAPP_TOKEN}`,
 					"Content-Type": "application/json",
-				}
-			}
-		)
-		return response.data
+				},
+			},
+		);
+		return response.data;
 	} catch (error) {
-		console.log("Error al enviar mensaje", error.response?.data || error.message)
+		console.log(
+			"Error al enviar mensaje",
+			error.response?.data || error.message,
+		);
 	}
-}
+};
 
-export const reservationReminder = async({
+export const reservationReminder = async ({
 	name,
 	phoneNumber,
 	service,
@@ -131,21 +137,23 @@ export const reservationReminder = async({
 								{ type: "text", text: worker },
 								{ type: "text", text: date },
 								{ type: "text", text: time },
-							]
-						}
-					]
-				}
+							],
+						},
+					],
+				},
 			},
-						{
+			{
 				headers: {
 					Authorization: `Bearer ${WHATSAPP_TOKEN}`,
 					"Content-Type": "application/json",
-				}
-			}
-		)
-		return response.data
+				},
+			},
+		);
+		return response.data;
 	} catch (error) {
-		console.log("Error al enviar mensaje", error.response?.data || error.message)
+		console.log(
+			"Error al enviar mensaje",
+			error.response?.data || error.message,
+		);
 	}
-}
-
+};

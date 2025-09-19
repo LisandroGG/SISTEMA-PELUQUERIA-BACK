@@ -272,11 +272,6 @@ export const getWorkerAvailableHours = async ({
 	);
 	const now = toZonedTime(new Date(), ARG_TIMEZONE);
 
-	console.log("Debug fechas");
-	console.log("Input date:", date);
-	console.log("parsedDate (inicio del día):", parsedDate);
-	console.log("now (ARG):", now);
-
 	if (isBefore(startOfDay(parsedDate), startOfDay(now))) {
 		return {
 			source: "past",
@@ -332,39 +327,32 @@ export const getWorkerAvailableHours = async ({
 
 	const timeSlots = [];
 
-const generateSlots = (startTimeStr, endTimeStr) => {
-	console.log("Generando slots entre:", startTimeStr, "->", endTimeStr);
-	let [hour, min] = startTimeStr.split(":").map(Number);
-	const [endHour, endMin] = endTimeStr.split(":").map(Number);
+	const generateSlots = (startTimeStr, endTimeStr) => {
+		let [hour, min] = startTimeStr.split(":").map(Number);
+		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
-	while (hour < endHour || (hour === endHour && min < endMin)) {
-		const slotDate = new Date(
-			parsedDate.getFullYear(),
-			parsedDate.getMonth(),
-			parsedDate.getDate(),
-			hour,
-			min,
-		);
-		const slotEndDate = addMinutes(slotDate, serviceDuration);
-		const slotStr = format(slotDate, "HH:mm");
+		while (hour < endHour || (hour === endHour && min < endMin)) {
+			const slotDate = new Date(
+				parsedDate.getFullYear(),
+				parsedDate.getMonth(),
+				parsedDate.getDate(),
+				hour,
+				min,
+			);
+			const slotEndDate = addMinutes(slotDate, serviceDuration);
+			const slotStr = format(slotDate, "HH:mm");
 
-		console.log("Slot generado:", {
-			rawDate: slotDate,
-			formatted: slotStr,
-			slotEnd: slotEndDate,
-		});
+			if (isAfter(slotDate, now)) {
+				timeSlots.push({ startTime: slotStr });
+			}
 
-		if (isAfter(slotDate, now)) {
-			timeSlots.push({ startTime: slotStr });
+			min += serviceDuration;
+			while (min >= 60) {
+				min -= 60;
+				hour += 1;
+			}
 		}
-
-		min += serviceDuration;
-		while (min >= 60) {
-			min -= 60;
-			hour += 1;
-		}
-	}
-};
+	};
 
 	if (customWorkingHours.length > 0) {
 		for (const customHour of customWorkingHours) {
@@ -428,18 +416,15 @@ const generateSlots = (startTimeStr, endTimeStr) => {
 			lastSlot.startTime,
 			"HH:mm",
 			new Date(`${date}T00:00`),
-		);	
+		);
 
 		if (isBefore(lastSlotDate, now)) {
-			console.log("Último turno ya pasó:", lastSlot);
 			return {
 				source: customWorkingHours.length > 0 ? "custom" : "weekly",
 				message: "Ya no hay turnos disponibles para este día",
 				timeSlots: [],
 			};
 		}
-
-		console.log("Último turno aún válido:", lastSlot);
 	}
 
 	return {

@@ -9,7 +9,7 @@ export const formatTimeToHHMM = (timeString) => {
 	return timeString.slice(0, 5);
 };
 
-export const  formatPhoneNumber = (rawNumber) => {
+export const formatPhoneNumber = (rawNumber) => {
 	let number = rawNumber.toString();
 
 	number = number.replace(/\D/g, "");
@@ -23,4 +23,4 @@ export const  formatPhoneNumber = (rawNumber) => {
 	}
 
 	return `54${number}`;
-}
+};
