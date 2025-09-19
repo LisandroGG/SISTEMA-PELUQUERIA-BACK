@@ -339,13 +339,13 @@ export const getWorkerAvailableHours = async ({
 		const [endHour, endMin] = endTimeStr.split(":").map(Number);
 
 		while (hour < endHour || (hour === endHour && min < endMin)) {
-			const slotDate = toZonedTime(new Date(
+			const slotDate = new Date(
 				parsedDate.getFullYear(),
 				parsedDate.getMonth(),
 				parsedDate.getDate(),
 				hour,
 				min,
-			), ARG_TIMEZONE );
+			);
 			const slotEndDate = addMinutes(slotDate, serviceDuration);
 			const slotStr = format(slotDate, "HH:mm");
 
