@@ -18,7 +18,7 @@ export const createDisableDay = async (req, res) => {
 				workerId,
 				date: day,
 				status: {
-					[Op.notIn]: ["cancel"],
+					[Op.notIn]: ["cancel", "finish"],
 				},
 			},
 		});
