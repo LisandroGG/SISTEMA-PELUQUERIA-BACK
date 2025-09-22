@@ -10,7 +10,7 @@ import { User } from "../models/users.js";
 const regexEmail = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 const regexPassword =
 	/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
-const regexPhone = /^\+?\d{10,15}$/;
+const regexPhone = /^\d{10}$/;
 
 const isProduction = process.env.API_STATUS === "production";
 
@@ -31,7 +31,7 @@ export const registerUser = async (req, res) => {
 		if (!regexPhone.test(phoneNumber)) {
 			return res.status(400).json({
 				message:
-					"El número de teléfono no es válido. Debe tener entre 10 y 15 dígitos y puede comenzar con +.",
+					"El número de teléfono no es válido. Debe tener 10 dígitos. Ej: 3472620188",
 			});
 		}
 		if (!regexPassword.test(password)) {
