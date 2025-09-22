@@ -14,13 +14,5 @@ export const formatPhoneNumber = (rawNumber) => {
 
 	number = number.replace(/\D/g, "");
 
-	if (number.startsWith("0")) {
-		number = number.slice(1);
-	}
-
-	if (number.startsWith("15")) {
-		number = number.slice(2);
-	}
-
 	return `54${number}`;
 };
