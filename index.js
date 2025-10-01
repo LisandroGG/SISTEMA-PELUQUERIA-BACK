@@ -82,7 +82,7 @@ app.get("/health", (req, res) => {
 
 async function main() {
 	try {
-		await sequelize.sync({ force: true });
+		await sequelize.sync({ force: false });
 
 		app.listen(PORT, () => {
 			logger.info(`Server is listening on port ${PORT}`);
