@@ -382,10 +382,10 @@ export const deleteFinishedReservations = async () => {
 		const deletedCount = await Reservation.destroy({
 			where: { status: "finish" },
 		});
-		console.log(`🧹 Se eliminaron ${deletedCount} reservas finalizadas.`);
+		console.log(`Se eliminaron ${deletedCount} reservas finalizadas.`);
 		return deletedCount;
 	} catch (error) {
-		console.error("❌ Error al eliminar reservas finalizadas:", error.message);
+		console.error("Error al eliminar reservas finalizadas:", error.message);
 		throw error;
 	}
 };

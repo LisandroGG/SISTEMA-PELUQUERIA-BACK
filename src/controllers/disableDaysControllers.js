@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { DisableDay } from "../models/disableDays.js";
 import { Reservation } from "../models/reservations.js";
+import { format } from "date-fns";
 
 export const createDisableDay = async (req, res) => {
 	const { workerId, day } = req.body;
@@ -76,3 +77,21 @@ export const deleteDisableDay = async (req, res) => {
 		res.status(500).json({ message: "Error del servidor." });
 	}
 };
+
+export const deletePastDisableDays = async () => {
+	try {
+		const today = format(new Date(), "yyyy-MM-dd")
+		const deletedCount = await DisableDay.destroy({
+			where: {
+				day: {
+					[Op.lt]: today
+				}
+			}
+		})
+		console.log(`Se borraron ${deletedCount} días deshabilitados`)
+		return deletedCount;
+	} catch (error) {
+		console.error("Error al eliminar dias deshabilitados pasados:", error.message);
+		throw error;
+	}
+}
