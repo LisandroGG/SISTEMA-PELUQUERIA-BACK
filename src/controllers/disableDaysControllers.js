@@ -1,7 +1,7 @@
+import { format } from "date-fns";
 import { Op } from "sequelize";
 import { DisableDay } from "../models/disableDays.js";
 import { Reservation } from "../models/reservations.js";
-import { format } from "date-fns";
 
 export const createDisableDay = async (req, res) => {
 	const { workerId, day } = req.body;
@@ -38,7 +38,7 @@ export const createDisableDay = async (req, res) => {
 			disableDay,
 		});
 	} catch (error) {
-		console.error("Error al deshabilitar el día:", error);
+		req.log.error("Error al deshabilitar el día:", error);
 		res.status(500).json({ message: "Error del servidor." });
 	}
 };
@@ -54,7 +54,7 @@ export const getDisabledDaysByWorker = async (req, res) => {
 
 		res.status(200).json(disabledDays);
 	} catch (error) {
-		console.error("Error al obtener los días deshabilitados:", error);
+		req.log.error("Error al obtener los días deshabilitados:", error);
 		res.status(500).json({ message: "Error del servidor." });
 	}
 };
@@ -73,25 +73,28 @@ export const deleteDisableDay = async (req, res) => {
 			.status(200)
 			.json({ message: "Día deshabilitado eliminado correctamente." });
 	} catch (error) {
-		console.error("Error al eliminar el día deshabilitado:", error);
+		req.log.error("Error al eliminar el día deshabilitado:", error);
 		res.status(500).json({ message: "Error del servidor." });
 	}
 };
 
 export const deletePastDisableDays = async () => {
 	try {
-		const today = format(new Date(), "yyyy-MM-dd")
+		const today = format(new Date(), "yyyy-MM-dd");
 		const deletedCount = await DisableDay.destroy({
 			where: {
 				day: {
-					[Op.lt]: today
-				}
-			}
-		})
-		console.log(`Se borraron ${deletedCount} días deshabilitados`)
+					[Op.lt]: today,
+				},
+			},
+		});
+		req.log.info(`Se borraron ${deletedCount} días deshabilitados`);
 		return deletedCount;
 	} catch (error) {
-		console.error("Error al eliminar dias deshabilitados pasados:", error.message);
+		req.log.error(
+			"Error al eliminar dias deshabilitados pasados:",
+			error.message,
+		);
 		throw error;
 	}
-}
+};

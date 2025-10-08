@@ -167,7 +167,7 @@ export const createReservation = async (req, res) => {
 			// 		token: token,
 			// 	});
 			// } catch (error) {
-			// 	console.log("Error al enviar mensaje de Gmail:", error.message);
+			// 	req.log.info("Error al enviar mensaje de Gmail:", error.message);
 			// }
 
 			try {
@@ -181,12 +181,12 @@ export const createReservation = async (req, res) => {
 					token: token,
 				});
 			} catch (error) {
-				console.log("Error al enviar mensaje de WhatsApp:", error.message);
+				req.log.info("Error al enviar mensaje de WhatsApp:", error.message);
 			}
 		})();
 		res.status(201).json({ message: "Reserva creada con éxito", reservation });
 	} catch (error) {
-		console.error("Error al crear la reserva:", error);
+		req.log.error("Error al crear la reserva:", error);
 		res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -225,7 +225,7 @@ export const getReservations = async (req, res) => {
 
 		res.status(200).json({ reservations });
 	} catch (error) {
-		console.error("Error al obtener las reservas.", error);
+		req.log.error("Error al obtener las reservas.", error);
 		res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -262,7 +262,7 @@ export const getReservationsByGmail = async (req, res) => {
 
 		return res.status(200).json({ reservations });
 	} catch (error) {
-		console.error("Error al obtener reservas por Gmail:", error);
+		req.log.error("Error al obtener reservas por Gmail:", error);
 		return res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -288,7 +288,7 @@ export const finishReservation = async (req, res) => {
 			.status(200)
 			.json({ message: "Reserva marcada como finalizada", reservation });
 	} catch (error) {
-		console.error("Error al cambiar el estado de la reserva:", error);
+		req.log.error("Error al cambiar el estado de la reserva:", error);
 		return res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -348,7 +348,7 @@ export const cancelReservation = async (req, res) => {
 			// 		worker: reservation.worker.name,
 			// 	});
 			// } catch (error) {
-			// 	console.log(
+			// 	req.log.info(
 			// 		"Error al enviar mensaje de cancelacion al Gmail:",
 			// 		error.message,
 			// 	);
@@ -363,7 +363,7 @@ export const cancelReservation = async (req, res) => {
 					worker: reservation.worker.name,
 				});
 			} catch (error) {
-				console.log(
+				req.log.info(
 					"Error al enviar mensaje de cancelacion al WhatsApp:",
 					error.message,
 				);
@@ -372,7 +372,7 @@ export const cancelReservation = async (req, res) => {
 
 		return res.status(200).json({ message: "Reserva cancelada", reservation });
 	} catch (error) {
-		console.error("Error al cancelar la reserva:", error);
+		req.log.error("Error al cancelar la reserva:", error);
 		return res.status(500).json({ message: "No se pudo cancelar" });
 	}
 };
@@ -382,10 +382,10 @@ export const deleteFinishedReservations = async () => {
 		const deletedCount = await Reservation.destroy({
 			where: { status: "finish" },
 		});
-		console.log(`Se eliminaron ${deletedCount} reservas finalizadas.`);
+		req.log.info(`Se eliminaron ${deletedCount} reservas finalizadas.`);
 		return deletedCount;
 	} catch (error) {
-		console.error("Error al eliminar reservas finalizadas:", error.message);
+		req.log.error("Error al eliminar reservas finalizadas:", error.message);
 		throw error;
 	}
 };

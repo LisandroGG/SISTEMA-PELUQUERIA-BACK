@@ -71,7 +71,7 @@ export const registerUser = async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.log("Error al crear cuenta, intenta nuevamente");
+		req.log.error("Error al crear cuenta, intenta nuevamente");
 		res
 			.status(404)
 			.json({ message: "Error al crear cuenta, intenta nuevamente" });
@@ -133,7 +133,7 @@ export const loginUser = async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.error("Error al iniciar sesion, intenta nuevamente", error);
+		req.log.error("Error al iniciar sesion, intenta nuevamente", error);
 		return res
 			.status(500)
 			.json({ message: "Error al iniciar sesion, intenta nuevamente" });
@@ -194,7 +194,7 @@ export const logoutUser = async (req, res) => {
 		});
 		res.status(200).json({ message: "Sesion cerrada exitosamente" });
 	} catch (error) {
-		console.error("Error en logout:", error);
+		req.log.error("Error en logout:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -225,7 +225,7 @@ export const forgotPassword = async (req, res) => {
 			.status(200)
 			.json({ message: "Se envio un correo de restablecer contraseña" });
 	} catch (error) {
-		console.log(error);
+		req.log.error(error);
 		res
 			.status(500)
 			.json({ message: "Error al enviar correo de recuperacion(server)" });

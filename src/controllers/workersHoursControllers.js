@@ -83,7 +83,7 @@ export const createWorkingHour = async (req, res) => {
 			hours: created,
 		});
 	} catch (error) {
-		console.error("Error al crear workingHours:", error);
+		req.log.error("Error al crear workingHours:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -126,7 +126,7 @@ export const getWorkingHours = async (req, res) => {
 			workingHours,
 		});
 	} catch (error) {
-		console.error("Error al obtener los horarios semanales:", error);
+		req.log.error("Error al obtener los horarios semanales:", error);
 		res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -183,7 +183,7 @@ export const createCustomWorkingHour = async (req, res) => {
 			customHour: customHour,
 		});
 	} catch (error) {
-		console.error("Error al crear customWorkingHours:", error);
+		req.log.error("Error al crear customWorkingHours:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -213,7 +213,7 @@ export const getCustomWorkingHours = async (req, res) => {
 			customWorkingHours,
 		});
 	} catch (error) {
-		console.error("Error al obtener los horarios personalizados:", error);
+		req.log.error("Error al obtener los horarios personalizados:", error);
 		res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -230,7 +230,7 @@ export const getHoursByDate = async (req, res) => {
 
 		return res.status(200).json(result);
 	} catch (error) {
-		console.error("Error al obtener los horarios del trabajador:", error);
+		req.log.error("Error al obtener los horarios del trabajador:", error);
 		return res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -255,7 +255,7 @@ export const getBlockedDays = async (req, res) => {
 				blockedDays.push(date);
 			}
 		} catch (err) {
-			console.error(`Error en día ${date}:`, err.message);
+			req.log.error(`Error en día ${date}:`, err.message);
 		}
 	}
 	return res.status(200).json({ blockedDays });
@@ -477,7 +477,7 @@ export const editWorkingHour = async (req, res) => {
 			workingHour,
 		});
 	} catch (error) {
-		console.error("Error al actualizar el horario:", error);
+		req.log.error("Error al actualizar el horario:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -528,7 +528,7 @@ export const editCustomWorkingHour = async (req, res) => {
 			customHour,
 		});
 	} catch (error) {
-		console.error("Error al actualizar customWorkingHour:", error);
+		req.log.error("Error al actualizar customWorkingHour:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -549,7 +549,7 @@ export const deleteWorkingHour = async (req, res) => {
 			.status(200)
 			.json({ message: "Horario semanal eliminado exitosamente!" });
 	} catch (error) {
-		console.error("Error al eliminar WorkingHour:", error);
+		req.log.error("Error al eliminar WorkingHour:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -572,7 +572,7 @@ export const deleteCustomWorkingHour = async (req, res) => {
 			.status(200)
 			.json({ message: "Horario personalizado eliminado exitosamente!" });
 	} catch (error) {
-		console.error("Error al eliminar CustomWorkingHour:", error);
+		req.log.error("Error al eliminar CustomWorkingHour:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };

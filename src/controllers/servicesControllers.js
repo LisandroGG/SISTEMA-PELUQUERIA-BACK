@@ -12,7 +12,7 @@ export const getServices = async (req, res) => {
 		});
 		res.status(200).json(services);
 	} catch (error) {
-		console.error("Error al obtener services", error);
+		req.log.error("Error al obtener services", error);
 		res.status(500).json({ message: "Error internom del servidor" });
 	}
 };
@@ -64,7 +64,7 @@ export const createService = async (req, res) => {
 			service: serviceWithWorkers,
 		});
 	} catch (error) {
-		console.error("Error al crear service", error);
+		req.log.error("Error al crear service", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -84,7 +84,7 @@ export const deleteService = async (req, res) => {
 			message: "Servicio eliminado correctamente",
 		});
 	} catch (error) {
-		console.error("Error al eliminar service", error);
+		req.log.error("Error al eliminar service", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -137,7 +137,7 @@ export const editService = async (req, res) => {
 			service: serviceWithWorkers,
 		});
 	} catch (error) {
-		console.error("Error al editar service", error);
+		req.log.error("Error al editar service", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };

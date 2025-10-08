@@ -8,7 +8,7 @@ export const getWorkers = async (req, res) => {
 		});
 		res.status(200).json(workers);
 	} catch (error) {
-		console.error("Error al obtener workers:", error);
+		req.log.error("Error al obtener workers:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -31,7 +31,7 @@ export const getWorkersByService = async (req, res) => {
 
 		res.json(service.Workers);
 	} catch (error) {
-		console.error("Error al obtener workersByService:", error);
+		req.log.error("Error al obtener workersByService:", error);
 		res.status(500).json({ message: "Error del servidor" });
 	}
 };
@@ -59,7 +59,7 @@ export const createWorker = async (req, res) => {
 			worker: newWorker,
 		});
 	} catch (error) {
-		console.error("Error al crear worker:", error);
+		req.log.error("Error al crear worker:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -77,7 +77,7 @@ export const deleteWorker = async (req, res) => {
 		await worker.destroy();
 		res.status(200).json({ message: "Trabajador eliminado correctamente" });
 	} catch (error) {
-		console.error("Error al eliminar trabajador:", error);
+		req.log.error("Error al eliminar trabajador:", error);
 		res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
@@ -109,7 +109,7 @@ export const editWorker = async (req, res) => {
 			worker,
 		});
 	} catch (error) {
-		console.error("Error al editar worker:", error);
+		req.log.error("Error al editar worker:", error);
 		return res.status(500).json({ message: "Error interno del servidor" });
 	}
 };
